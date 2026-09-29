@@ -43,7 +43,11 @@ env.update({
 destination = pathlib.Path("/home/winbeau/xju-arlab/hp-printer")
 url = "https://github.com/xju-arlab/hp-printer.git"
 def git(*args):
-    subprocess.run(["git", *args], env=env, check=True, timeout=180)
+    # Some LAN proxies stall HTTP/2 streams; bound stalled transfers as well as
+    # the overall operation so a transient outage does not leave a pull hanging.
+    subprocess.run(["git", "-c", "http.version=HTTP/1.1",
+                    "-c", "http.lowSpeedLimit=1000", "-c", "http.lowSpeedTime=30",
+                    *args], env=env, check=True, timeout=180)
 if not (destination / ".git").is_dir():
     if destination.exists() and any(destination.iterdir()):
         raise SystemExit("Destination exists and is not an empty repository")
