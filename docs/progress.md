@@ -21,7 +21,7 @@
 | 公网网关 | 已部署，HTTPS health 200，匿名 IPP 401，原 CUPS/USB 保留 |
 | Authentik | 独立应用和打印组已配置；winbeau 已授权；真实浏览器登录待完成 |
 | Windows EXE | 已构建；新命名队列与公网 Word 打印待登录后验收 |
-| GitHub / Pi | 私有仓库已建立，本地提交和 Pi 拉取已打通；发布验收进行中 |
+| GitHub / Pi | 私有仓库已建立，本地提交和 Pi 拉取已打通；v0.1.0-rc.1 候选版已发布 |
 | 后续 | CLI 队列管理、可靠文件提交、网页上传/DOCX 和 LabOS 分阶段实现 |
 
 ## 本轮 P1 实施
@@ -40,7 +40,7 @@
 
 ### 用户追加的优先范围
 
-已提前实现 Windows 安装包与公网 IPP 通路代码。首次安装等待浏览器授权超时，当前不能认定新队列或公网 Word 打印成功。详见 [Windows 发布实测](verification/windows-release-20260929.md)；待用户完成账号授权后继续安装与作业验收，最后发布私有 Release。
+已提前实现 Windows 安装包与公网 IPP 通路代码。首次安装等待浏览器授权超时，当前不能认定新队列或公网 Word 打印成功。私有 [v0.1.0-rc.1 候选版](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.1) 已发布，包含 GitHub 构建的 EXE 和 SHA256。详见 [Windows 发布实测](verification/windows-release-20260929.md)；待用户完成账号授权后继续安装与作业验收，通过后再发布稳定版。
 
 Windows 到树莓派现有 CUPS/USB 的系统打印主链路和本次实物出纸已经验证，可开始 P2（Python + uv 的只读核心与 CLI）。P1 的协议合规、稳定 WLAN 地址、元数据权限及 Word/PDF 兼容仍列为明确收尾项，不能写成完整发布验收通过。
 

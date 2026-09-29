@@ -15,6 +15,7 @@
 - Authentik 位于 huawei2 的 Docker 部署。本仓库 `deploy/authentik-hp-printer.yaml` 已应用并作为数据库 BlueprintInstance 持久化。用户指定 `winbeau` 为首个打印授权成员，已加入 hp-printer-users。相邻 auth-login 工作区已有未提交变更，不修改它。
 - Windows 安装器使用 public OIDC client + PKCE，回调 127.0.0.1:18766；当前用户 DPAPI 保存令牌。后台桥 127.0.0.1:18765，优先探测 LAN CUPS UUID，其他情况通过 HTTPS 公网网关；无需客户端 cloudflared。
 - 目标 Windows 设备名“算法实验室·惠普打印机”，内置 Microsoft IPP Class Driver，当前用户登录时自动启动。安装器代码和 EXE 构建已完成，真实用户登录流程尚待完成。
+- 私有 Release v0.1.0-rc.1 已发布，含 GitHub 构建并核对 SHA256 的 EXE。该标签固定 dc74df4，后续文档记录继续同步 main；不得将候选版写成通过 Windows 端到端验收。
 - 既有 Windows P1 队列 `HP DeskJet 4900 (Pi CUPS)` 已实际打印，用户确认出纸。这个事实不能替代新安装器和公网路径验收。原 USB 默认打印机不更改。
 
 ## 验收与已知限制
@@ -33,4 +34,4 @@ CUPS 生产响应重复 media-default/sides-default 尚未根治，Windows 桥�
 
 ## 后续继续提示
 
-> 先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md、docs/progress.md 和本轮实测记录。继续完成当前 Windows 登录、安装、公网 Word 打印验收以及私有 GitHub Release；保持本地、GitHub、Pi 相同提交。随后再逐阶段补齐 CLI 打印和队列管理，不重建 CUPS/USB、不引入前端，也不把待验收项写成完成。
+> 先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md、docs/progress.md 和本轮实测记录。私有候选版 v0.1.0-rc.1 已发布，继续完成 Windows 登录、安装、公网 Word 打印验收，通过后发布稳定版；保持本地、GitHub、Pi 的 main 相同提交。随后再逐阶段补齐 CLI 打印和队列管理，不重建 CUPS/USB、不引入前端，也不把待验收项写成完成。

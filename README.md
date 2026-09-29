@@ -4,6 +4,8 @@
 
 > 当前已有 Python + uv 工程、Authentik 公网 IPP 网关和 Windows EXE 安装程序。网关已部署；新版安装器的真实账号登录、系统队列添加和公网 Word 打印仍待验收。此前 P1 的 LAN 测试页已由用户确认出纸。
 
+**[下载私有候选版 v0.1.0-rc.1](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.1)**：EXE 与 SHA256 已发布，需有仓库访问权限。候选版尚未完成真实账号和 Windows 打印验收。
+
 ```text
 Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────────┐
                               → HTTPS + Authentik       v
