@@ -1,39 +1,36 @@
 # 新对话交接说明
 
-[计划索引](README.md) · [进度](progress.md) · [实机基线](00-current-device.md)
+[计划索引](README.md) · [进度](progress.md) · [Windows 与公网](09-windows-release.md)
 
-## 1. 工作位置与已完成事项
+## 当前目标与范围
 
-项目位于 `/home/winbeau/xju-arlab/hp-printer`，与 `xju-lab`、`xju-feiyue` 同级。Windows 可通过 WSL 共享目录访问。
+用户将以下内容提前：Windows EXE 安装器、Authentik 登录与邮箱/打印组准入、校外 Word Ctrl+P、私有 GitHub Release、本地和 Pi 版本同步。纯 Python + uv，无前端工程，无 HP 专有驱动安装。网页上传、DOCX 转换/字体和完整 CLI 队列管理仍为后续阶段。
 
-当前仍只有项目说明和设计文档，没有 Python 包、CLI、后端服务或安装脚本。P1 已在 Pi 上完成受限 CUPS 共享和内部 ipp-usb 端口保护；Windows 新队列已提交一项作业，详见 [P1 实测记录](verification/p1-20260929.md)。
+## 已落地
 
-用户最新要求已覆盖旧方案：**纯 Python 后端 + uv 工程 + CLI 打印，不开发前端**。根目录采用 pyproject.toml、uv.lock、src/hp_printer/，不建 frontend/backend 双工程，不引入 Node/pnpm。建议 Typer + FastAPI + pycups + SQLite + systemd，详见 [08 CLI 与 uv](08-cli-and-uv.md)。相邻 xju-lab 的代码不在本项目修改范围。
+- 本地 `/home/winbeau/xju-arlab/hp-printer`，私有仓库 `https://github.com/xju-arlab/hp-printer`，主分支 main；Pi 同路径 clone。版本以 GitHub 为准，本地 commit/push 后用 `scripts/sync-pi.sh` 拉取，再在 Pi 执行 `scripts/install-pi.sh`。
+- Pi `winbeau@192.168.5.87`，主机 fourb，Ubuntu 24.04.4 arm64。原 `HP_DeskJet_4900 → ipp://localhost:60000/ipp/print → USB` 保留。P1 备份 `/home/winbeau/hp-printer-backups/p1-20260929/`。
+- CUPS 只在 loopback 和 WLAN 192.168.5.87:631 服务；192.168.5.0/24 直接打印，管理页面限 loopback，ipp-usb 外部端口有 nftables 保护。WLAN DHCP 保留仍未确认。
+- Python 网关由 systemd `hp-printer.service` 运行，监听 127.0.0.1:8765。现有 Cloudflare Tunnel 将 hp.icthub.top 转发至此。`/health` 已公网返回 200，匿名 IPP 返回 401。
+- Authentik 位于 huawei2 的 Docker 部署。本仓库 `deploy/authentik-hp-printer.yaml` 已应用并作为数据库 BlueprintInstance 持久化。用户指定 `winbeau` 为首个打印授权成员，已加入 hp-printer-users。相邻 auth-login 工作区已有未提交变更，不修改它。
+- Windows 安装器使用 public OIDC client + PKCE，回调 127.0.0.1:18766；当前用户 DPAPI 保存令牌。后台桥 127.0.0.1:18765，优先探测 LAN CUPS UUID，其他情况通过 HTTPS 公网网关；无需客户端 cloudflared。
+- 目标 Windows 设备名“算法实验室·惠普打印机”，内置 Microsoft IPP Class Driver，当前用户登录时自动启动。安装器代码和 EXE 构建已完成，真实用户登录流程尚待完成。
+- 既有 Windows P1 队列 `HP DeskJet 4900 (Pi CUPS)` 已实际打印，用户确认出纸。这个事实不能替代新安装器和公网路径验收。原 USB 默认打印机不更改。
 
-## 2. 必须继承的事实
+## 验收与已知限制
 
-- Raspberry Pi 4B，主机 `fourb`；本轮地址 `winbeau@192.168.5.87`，Ubuntu 24.04.4 arm64。
-- HP DeskJet 4900 series 通过 USB 连接；现有队列 `HP_DeskJet_4900` → `ipp://localhost:60000/ipp/print` → ipp-usb。
-- 默认自动打印，管理员可暂停、取消、恢复；第一版实验室 LAN，Windows 系统打印机优先。
-- 权限已确认：实验室 LAN 电脑直接打印，管理员登录管理，首版不要求逐人认证。
-- 管理员改为 CLI 登录；提供文件打印、查询、取消、挂起/释放、暂停/恢复、诊断命令。CLI/API 与 Windows 共用唯一 CUPS 队列。
-- CUPS 原队列和 USB 链路已保留；当前仅在 Pi WLAN `192.168.5.87:631` 服务 `192.168.5.0/24`，管理配置仅 loopback。该地址尚未确认 DHCP 保留。
-- USB 原始 IPP 侧查询通过；CUPS 生产队列仍重复 `media-default`/`sides-default`。重复原因定位到 CUPS 队列响应路径但尚未修复；Windows 当前 build 26200 已通过内置 Microsoft IPP Class Driver 完成一项作业提交。
-- 原 Windows WSD/USB 打印队列均保留，USB 队列仍是默认；新队列为 `HP DeskJet 4900 (Pi CUPS)`，使用系统自带 Microsoft IPP Class Driver。CUPS 报告测试作业完成，用户确认测试页实际出纸。
-- `/admin`、`/admin/conf` 从 WLAN 返回 403；匿名 completed jobs 页面没有列出本次任务，但 IPP `Get-Jobs`/`Get-Job` 权限范围仍待单独验证。其他应用/系统兼容、protected print、Word/PDF 待后续验收。
-- CUPS 是唯一实际调度者；服务同步所有原生 IPP 任务，不创建另一个直接控制 USB 的执行队列。
-- 原生用户名不作为可信成员身份；不得靠重新提交来掩盖上游超时或未知打印状态。
+详细证据以 [本轮记录](verification/windows-release-20260929.md) 为准。首次浏览器授权等待超时，不能把新版打印机安装或公网 Word 打印标为完成。下一步让用户在系统浏览器完成 winbeau 登录，检查新队列、后台自启/刷新、LAN 与强制公网的合成文档；实物出纸另由用户确认。
 
-连接信息来自已授权的先前对话，凭据不在项目中。活动 SSH 连接可能过期；先验证连接，不把认证失败误诊成设备离线。修改配置前需要正常的管理员认证，当前账号并未证明具备免密 sudo。
+公网限制每次 IPP 请求 80 MiB；账号须有已验证邮箱与打印组。服务端检查 JWT 和作业所有权，不信任客户端自报用户名。已提交请求失败后不自动换路重发。CUPS 是唯一调度者。
 
-## 3. 当前阶段与下一步
+CUPS 生产响应重复 media-default/sides-default 尚未根治，Windows 桥过滤相同重复默认值。CUPS 曾报告 media-empty-report，原 USB 接口却 idle/none；仍需观察。protected print、实际校外网络和更多 Windows 客户端未验证。EXE 当前无代码签名证书。
 
-P1 Windows→Pi CUPS→USB 主链路已验证，下一步按阶段开始 P2：创建根目录 Python + uv 包、CLI help/version、配置加载及只读 CUPS 状态/作业查询。不要先建前端或重建系统打印队列。
+## 运维注意
 
-P1 后续收尾仍要跟踪：查明并修复 CUPS 重复默认属性（严格 IPP 检查失败）；核验 WLAN 地址稳定性和 IPP `Get-Jobs`/`Get-Job` 权限范围；验证 Word/PDF、protected print 和其他 Windows 客户端。测试页实物出纸已由用户确认。Pi 备份与当前回退步骤见 [P1 实测记录](verification/p1-20260929.md)。复用既有 SSH/tmux 会话时先检查连接状态；不在聊天或项目里记录凭据。
+组织禁止 deploy keys；同步使用本机 gh 现有授权，通过 SSH stdin 临时传给 Pi 进程，凭据不落盘。同步/下载可经 Windows LAN 代理 192.168.5.71:10808。已部署网关独立于本机代理运行。Pi sudo 非免密，凭据不进 Git 或日志。
 
-若端到端步骤因现场权限/地址受阻，按真实子步记录，不把“端口可达”写成 Windows 打印成功。用户已回答的硬件、自动打印、LAN 直接打印/管理员登录和优先入口不要再问。
+生产使用 `/opt/hp-printer/releases/<commit>` 不可变目录和 current 链接，uv --locked 安装；健康检查失败回退上个版本。GitHub 标签流水线先构建草稿 Release，审核真实验收结果后发布。
 
-## 4. 可复制启动提示词
+## 后续继续提示
 
-> 在 hp-printer 项目继续开发，纯 Python + uv，支持 CLI 打印，不做前端。先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md 和 docs/progress.md。P1 Windows→Pi CUPS→USB 主链路已有实测，但 IPP 重复属性、纸张目视确认、稳定地址与兼容收尾仍未完成；先核实并处理这些收尾项，再按 docs/06-roadmap-and-acceptance.md 逐阶段实现后端和 CLI。不要安装 HP 厂商驱动或开发前端。
+> 先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md、docs/progress.md 和本轮实测记录。继续完成当前 Windows 登录、安装、公网 Word 打印验收以及私有 GitHub Release；保持本地、GitHub、Pi 相同提交。随后再逐阶段补齐 CLI 打印和队列管理，不重建 CUPS/USB、不引入前端，也不把待验收项写成完成。

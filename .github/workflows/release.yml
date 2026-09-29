@@ -21,9 +21,9 @@ jobs:
         with:
           name: windows-installer
           path: dist/*
-      - name: Publish release
+      - name: Prepare draft release
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
-        run: gh release create $env:GITHUB_REF_NAME dist/ICTHubPrinterSetup.exe dist/SHA256SUMS.txt --verify-tag --title "ICTHub Printer $env:GITHUB_REF_NAME" --notes-file docs/release-notes.md
+        run: gh release create $env:GITHUB_REF_NAME dist/ICTHubPrinterSetup.exe dist/SHA256SUMS.txt --draft --verify-tag --title "ICTHub Printer $env:GITHUB_REF_NAME" --notes-file docs/release-notes.md

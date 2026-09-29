@@ -2,7 +2,20 @@
 
 [返回主计划](README.md) · [队列与 API](03-queue-and-api.md) · [实施阶段](06-roadmap-and-acceptance.md)
 
-> 本文是待实现契约。当前尚无 pyproject.toml、uv.lock 或可执行 hp-printer 命令，以下示例用于指导后续逐步开发。
+> 本文主要是后续 CLI 契约。当前已有 pyproject.toml、uv.lock、Python 3.12 包、help/version、doctor 和 serve；文件打印、队列管理及下述统一 JSON/退出码契约尚未实现。Windows 与公网优先范围见 [09](09-windows-release.md)。
+
+## 当前可执行入口
+
+```bash
+uv sync --locked
+uv run hp-printer --help
+uv run hp-printer --version
+# Pi 上只读检查现有 CUPS
+uv run hp-printer doctor
+uv run hp-printer serve --config config.example.toml
+```
+
+当前通过 HTTPX 直接处理受限 IPP，不依赖 pycups，不存在 `server` extra；构建使用固定的 hatchling。下面涉及 pycups、全局配置、管理员认证和 print/jobs 的章节保留为后续设计，不能当作当前命令使用。
 
 ## 1. 工程约定
 

@@ -2,13 +2,13 @@
 
 [项目首页](../README.md) · [新对话入口](HANDOFF.md) · [进度记录](progress.md)
 
-> 设计 v0.3 · 2026-09-29 · 当前阶段：P1 Windows→Pi→USB 主链路已验证；IPP 严格检查和实物/兼容收尾项仍在跟踪。
+> 设计 v0.4 · 2026-09-29 · 当前优先交付 Windows 安装包与公网打印；部署已完成，真实登录及公网 Word 打印待验收。P1 LAN 测试页已确认出纸。
 
 ## 1. 已确认目标
 
 用户已有树莓派控制打印机的可用配置。设备为 **树莓派 4B + USB 连接 HP DeskJet 4900 series**。新建独立 `hp-printer` 项目，解决直接使用打印机网络连接不稳定的问题。
 
-Windows 首选作为系统打印机添加，在 Word、浏览器、PDF 阅读器等应用中直接打印；同时支持 CLI 命令提交文件、查看和控制队列。用户已明确本项目为纯 Python 后端，使用 uv，不开发前端。第一版只服务实验室同一局域网，远程访问与 LabOS 接入放后续。
+Windows 首选作为系统打印机添加，在 Word、浏览器、PDF 阅读器等应用中直接打印；同时计划支持 CLI 命令提交文件、查看和控制队列。项目为纯 Python + uv，无前端工程。用户后续明确将 Windows EXE 安装、公网打印和 GitHub/Pi 版本同步提前；LabOS、网页上传和 DOCX 服务端转换仍在后续。
 
 权限已确认：实验室局域网电脑直接打印，管理员登录管理；首版不要求每个打印用户认证。
 
@@ -36,6 +36,8 @@ Windows 首选作为系统打印机添加，在 Word、浏览器、PDF 阅读器
 | [06 分阶段实施与验收](06-roadmap-and-acceptance.md) | P0–P7 小步骤、证据、故障用例 |
 | [07 LabOS 对接边界](07-labos-integration.md) | 独立服务与现有 xju-lab 计划的关系 |
 | [08 CLI 与 uv 工程](08-cli-and-uv.md) | 命令契约、登录、输出/退出码、Python 包、依赖和部署 |
+| [09 Windows 安装与公网](09-windows-release.md) | 本轮优先范围、Authentik、Windows 后台桥、GitHub 与 Pi 同步 |
+| [本轮实测记录](verification/windows-release-20260929.md) | 实际部署、验收证据和仍待完成项 |
 | [资料依据](references.md) | 官方协议依据与本地事实的边界 |
 | [交接说明](HANDOFF.md) | 新对话第一步及可复制提示词 |
 

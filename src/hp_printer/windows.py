@@ -218,6 +218,9 @@ def agent():
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        if stream and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="算法实验室·惠普打印机安装与登录")
     parser.add_argument("command", nargs="?", choices=["install", "login", "agent", "status", "uninstall", "remote-only", "auto-route"], default="install")
     parser.add_argument("--version", action="version", version=__version__)

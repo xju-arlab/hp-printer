@@ -14,11 +14,15 @@ from .config import GatewayConfig
 from .ipp import (
     CREATE_OPERATIONS,
     JOB_OPERATIONS,
+    Attribute,
     IPPError,
     Message,
     parse,
     prepare_request,
     response_error,
+)
+from .ipp import (
+    request as ipp_request,
 )
 
 log = logging.getLogger("hp_printer.gateway")
@@ -114,6 +118,24 @@ def create_app(config: GatewayConfig | None = None, *, verifier=None, transport=
             except IPPError as exc:
                 return Response(response_error(incoming, 0x0400, str(exc)), media_type="application/ipp")
             try:
+                if incoming.code in JOB_OPERATIONS:
+                    # Check the current CUPS owner as well as our ledger: a restored or
+                    # reset CUPS database could reuse a historical numeric job ID.
+                    import struct
+
+                    ownership = ipp_request(0x0009)
+                    ownership.replace(b"job-id", 0x21, struct.pack("!i", job_id))
+                    ownership.replace(b"requesting-user-name", 0x42, owner.encode())
+                    ownership.replace(b"requested-attributes", 0x44, b"job-originating-user-name")
+                    check = await req.app.state.http.post(config.cups_url, content=ownership.encode(), headers={"Content-Type": "application/ipp"})
+                    current = parse(check.content, allow_document=False)
+                    if check.status_code != 200 or current.code >= 0x0400 or current.values(b"job-originating-user-name") != [owner.encode()]:
+                        return Response(response_error(incoming, 0x0406, "Job not found"), media_type="application/ipp")
+                if incoming.code == 0x000A:
+                    attributes = incoming.values(b"requested-attributes", 1) or [b"all"]
+                    attributes = list(dict.fromkeys(attributes + [b"job-id", b"job-originating-user-name"]))
+                    incoming.replace(b"requested-attributes", 0x44, attributes[0])
+                    incoming.groups[0].attributes.extend(Attribute(0x44, b"", item) for item in attributes[1:])
                 # A failed or ambiguous POST is never retried by this gateway.
                 result = await req.app.state.http.post(
                     config.cups_url, content=incoming.encode(),
@@ -136,8 +158,9 @@ def create_app(config: GatewayConfig | None = None, *, verifier=None, transport=
                     if group.tag != 2:
                         kept.append(group)
                         continue
-                    job = Message(outgoing.version, outgoing.code, outgoing.request_id, [group]).job_id()
-                    if job and owners.owns(job, owner):
+                    details = Message(outgoing.version, outgoing.code, outgoing.request_id, [group])
+                    job = details.job_id()
+                    if job and owners.owns(job, owner) and details.values(b"job-originating-user-name") == [owner.encode()]:
                         kept.append(group)
                 outgoing.groups = kept
             return Response(outgoing.encode(), media_type="application/ipp", headers={"Cache-Control": "no-store"})

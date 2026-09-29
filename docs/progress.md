@@ -17,8 +17,12 @@
 | P1 Windows → Pi 作业 | Windows/CUPS 均报告完成，用户确认测试页已出纸；USB 原始端点为 idle/none，但 CUPS 原因仍为 `media-empty-report` |
 | IPP 严格协议检查 | 已定位到 CUPS 生产队列响应层；重复默认属性仍未修复，Windows 本次提交未被阻断 |
 | P1 其他待验收 | 稳定 WLAN 地址、IPP Get-Jobs/Get-Job 权限、Word/PDF、protected print 和更多客户端未验证 |
-| P2–P6 | 未开始；Python 包、uv.lock、CLI、服务和安装脚本尚不存在 |
-| P7 LabOS/远程 | 后续可选 |
+| Python + uv 基础 | 已实现包、锁文件、help/version、doctor、serve；完整队列/文件 CLI 待实现 |
+| 公网网关 | 已部署，HTTPS health 200，匿名 IPP 401，原 CUPS/USB 保留 |
+| Authentik | 独立应用和打印组已配置；winbeau 已授权；真实浏览器登录待完成 |
+| Windows EXE | 已构建；新命名队列与公网 Word 打印待登录后验收 |
+| GitHub / Pi | 私有仓库已建立，本地提交和 Pi 拉取已打通；发布验收进行中 |
+| 后续 | CLI 队列管理、可靠文件提交、网页上传/DOCX 和 LabOS 分阶段实现 |
 
 ## 本轮 P1 实施
 
@@ -33,6 +37,10 @@
 实测和回退细节见 [P1 记录](verification/p1-20260929.md)。
 
 ## 阶段判定与下一步
+
+### 用户追加的优先范围
+
+已提前实现 Windows 安装包与公网 IPP 通路代码。首次安装等待浏览器授权超时，当前不能认定新队列或公网 Word 打印成功。详见 [Windows 发布实测](verification/windows-release-20260929.md)；待用户完成账号授权后继续安装与作业验收，最后发布私有 Release。
 
 Windows 到树莓派现有 CUPS/USB 的系统打印主链路和本次实物出纸已经验证，可开始 P2（Python + uv 的只读核心与 CLI）。P1 的协议合规、稳定 WLAN 地址、元数据权限及 Word/PDF 兼容仍列为明确收尾项，不能写成完整发布验收通过。
 

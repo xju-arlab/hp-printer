@@ -127,8 +127,10 @@ def browser_login(timeout: int = 600) -> dict:
                 raise AuthError("Authorization code exchange failed")
             tokens = reply.json()
     check = TokenVerifier()
-    check.verify(tokens.get("id_token", ""), nonce=nonce)
-    check.verify(tokens.get("access_token", ""))
+    identity = check.verify(tokens.get("id_token", ""), nonce=nonce)
+    access = check.verify(tokens.get("access_token", ""))
+    if identity["sub"] != access["sub"]:
+        raise AuthError("Identity and access token subjects differ")
     if not tokens.get("refresh_token"):
         raise AuthError("The printer application must allow offline_access")
     tokens["obtained_at"] = time.time()

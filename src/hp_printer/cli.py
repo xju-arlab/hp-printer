@@ -11,7 +11,7 @@ from .ipp import parse, request
 app = typer.Typer(help="ICTHub printer gateway and read-only diagnostics.")
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(version: bool = typer.Option(False, "--version", is_eager=True)):
     if version:
         typer.echo(__version__)

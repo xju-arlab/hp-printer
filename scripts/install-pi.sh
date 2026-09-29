@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 022
+export UV_NO_PROGRESS=1
 
 # Run from the clean, committed checkout after git pull --ff-only.
 repository=$(cd -- "$(dirname -- "$0")/.." && pwd -P)
@@ -31,7 +32,7 @@ systemctl daemon-reload
 systemctl enable hp-printer.service
 systemctl restart hp-printer.service
 for attempt in {1..20}; do
-  if curl --noproxy '*' -fsS --max-time 2 http://127.0.0.1:8765/health >/dev/null; then
+  if curl --noproxy '*' -fsS --max-time 2 http://127.0.0.1:8765/health >/dev/null 2>&1; then
     echo "Deployed hp-printer $revision"
     exit 0
   fi
