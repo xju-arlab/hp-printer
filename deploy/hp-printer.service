@@ -1,0 +1,25 @@
+[Unit]
+Description=ICTHub authenticated IPP gateway
+After=network-online.target cups.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hp-printer
+Group=hp-printer
+WorkingDirectory=/opt/hp-printer/current
+EnvironmentFile=/etc/hp-printer/release.env
+ExecStart=/opt/hp-printer/current/.venv/bin/hp-printer serve --config /etc/hp-printer/config.toml
+Restart=on-failure
+RestartSec=5
+UMask=0077
+StateDirectory=hp-printer
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hp-printer
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

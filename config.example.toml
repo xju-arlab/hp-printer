@@ -1,0 +1,9 @@
+[gateway]
+listen = "127.0.0.1"
+port = 8765
+cups_url = "http://127.0.0.1:631/printers/HP_DeskJet_4900"
+state_dir = "/var/lib/hp-printer"
+issuer = "https://auth.icthub.top/application/o/hp-printer/"
+client_id = "icthub-hp-printer-windows"
+required_group = "hp-printer-users"
+max_request_bytes = 83886080

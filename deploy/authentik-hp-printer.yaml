@@ -1,0 +1,72 @@
+version: 1
+metadata:
+  name: ICTHub HP Printer native Windows client
+entries:
+  - model: authentik_core.group
+    id: printer-users
+    identifiers:
+      name: hp-printer-users
+    attrs:
+      is_superuser: false
+
+  - model: authentik_providers_oauth2.oauth2provider
+    id: printer-provider
+    identifiers:
+      name: ICTHub HP Printer OIDC
+    attrs:
+      client_type: public
+      client_id: icthub-hp-printer-windows
+      grant_types:
+        - authorization_code
+        - refresh_token
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      redirect_uris:
+        - matching_mode: strict
+          url: http://127.0.0.1:18766/callback
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, ICThub profile scope]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, ICThub verified email scope]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, ICThub groups scope]]
+        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, offline_access]]
+      signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
+      sub_mode: hashed_user_id
+      issuer_mode: per_provider
+      include_claims_in_id_token: true
+      access_code_validity: minutes=1
+      access_token_validity: minutes=5
+      refresh_token_validity: days=30
+
+  - model: authentik_policies_expression.expressionpolicy
+    id: printer-policy
+    identifiers:
+      name: ICTHub HP Printer verified member
+    attrs:
+      expression: |
+        user = request.user
+        return (
+            user.is_authenticated and user.is_active and bool(user.email)
+            and user.groups.filter(name="studio-users").exists()
+            and user.groups.filter(name="hp-printer-users").exists()
+        )
+
+  - model: authentik_core.application
+    id: printer-application
+    identifiers:
+      slug: hp-printer
+    attrs:
+      name: 算法实验室·惠普打印机
+      provider: !KeyOf printer-provider
+      meta_launch_url: https://hp.icthub.top
+      policy_engine_mode: all
+
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !KeyOf printer-application
+      order: 0
+    attrs:
+      policy: !KeyOf printer-policy
+      enabled: true
+      negate: false
+      timeout: 30
