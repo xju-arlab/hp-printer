@@ -1,5 +1,6 @@
 import argparse
 import base64
+import contextlib
 import ctypes
 import hashlib
 import json
@@ -17,8 +18,9 @@ import httpx
 
 from . import __version__
 from .auth import AuthError, TokenVerifier, browser_login, refresh_tokens
-from .config import LOCAL_PORT, LOCAL_URL, PRINTER_NAME, PUBLIC_URL
+from .config import LOCAL_PORT, PRINTER_NAME, PUBLIC_URL
 from .credentials import app_dir, load_tokens, save_tokens
+from .windows_queue import configure_queue_script
 
 
 def psquote(value: str) -> str:
@@ -48,6 +50,7 @@ def elevated_powershell(script: str) -> str:
     handle, filename = tempfile.mkstemp(prefix="printer-setup-", suffix=".json", dir=app_dir())
     os.close(handle)
     result_path = Path(filename)
+    arguments_path = result_path.with_suffix(".args")
     elevated = (
         "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; "
         "try { $result = & { " + script + " }; "
@@ -57,9 +60,13 @@ def elevated_powershell(script: str) -> str:
     )
     encoded = base64.b64encode(elevated.encode("utf-16le")).decode()
     try:
+        # Avoid nesting the long configuration twice in EncodedCommand: it
+        # would exceed CreateProcess's command-line limit after UTF-16/base64.
+        arguments_path.write_text("-NoProfile -NonInteractive -EncodedCommand " + encoded, encoding="ascii")
         powershell(
+            f"$arguments=Get-Content -LiteralPath {psquote(str(arguments_path))} -Raw; "
             "$p=Start-Process -FilePath powershell.exe -Verb RunAs -WindowStyle Hidden -Wait -PassThru "
-            f"-ArgumentList '-NoProfile -NonInteractive -EncodedCommand {encoded}'; "
+            "-ArgumentList $arguments; "
             "if($p.ExitCode -ne 0){throw '管理员打印机配置进程未正常完成。'}", timeout=300,
         )
         result = json.loads(result_path.read_text(encoding="utf-8-sig"))
@@ -68,11 +75,13 @@ def elevated_powershell(script: str) -> str:
         return result["output"]
     finally:
         result_path.unlink(missing_ok=True)
+        arguments_path.unlink(missing_ok=True)
 
 
 def read_settings() -> dict:
     try:
-        return json.loads((app_dir() / "settings.json").read_text(encoding="utf-8"))
+        settings = json.loads((app_dir() / "settings.json").read_text(encoding="utf-8-sig"))
+        return settings if isinstance(settings, dict) else {}
     except (OSError, ValueError):
         return {}
 
@@ -115,16 +124,14 @@ def login(*, reuse: bool = False, allow_browser: bool = True):
 
 
 def stop_agent():
-    path = app_dir() / "agent.pid"
-    try:
-        pid = int(path.read_text())
-    except (OSError, ValueError):
-        return
     destination = str(app_dir() / "ICTHubPrinter.exe")
+    # The PID file can be missing after a partial installation. Match both the
+    # executable and the agent command, including the PyInstaller parent.
     powershell(
-        f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId={pid}'; "
-        f"if($p -and $p.ExecutablePath -eq {psquote(destination)} -and $p.CommandLine -match ' agent(?: |$)')"
-        f"{{Stop-Process -Id {pid} -Force}}"
+        "$agents=@(Get-CimInstance Win32_Process -Filter \"Name='ICTHubPrinter.exe'\" | Where-Object { "
+        f"$_.ExecutablePath -eq {psquote(destination)} -and $_.CommandLine -match ' agent(?: |$)'"
+        "}); foreach($item in $agents){Stop-Process -Id $item.ProcessId -Force -ErrorAction SilentlyContinue}; "
+        "foreach($item in $agents){Wait-Process -Id $item.ProcessId -Timeout 10 -ErrorAction SilentlyContinue}"
     )
     deadline = time.monotonic() + 8
     while time.monotonic() < deadline:
@@ -145,7 +152,66 @@ def shortcut(path: Path, executable: str, arguments: str = ""):
     )
 
 
+def same_file_content(source: Path, destination: Path) -> bool:
+    """Repeated installation of identical bytes must not restart the agent."""
+    if not destination.is_file() or source.stat().st_size != destination.stat().st_size:
+        return False
+    with source.open("rb") as first, destination.open("rb") as second:
+        return hashlib.file_digest(first, "sha256").digest() == hashlib.file_digest(second, "sha256").digest()
+
+
+def replace_executable(source: Path, destination: Path, *, agent_file: bool = False):
+    if source.resolve() == destination.resolve() or same_file_content(source, destination):
+        return
+    temporary = destination.with_suffix(".new.exe")
+    try:
+        shutil.copy2(source, temporary)
+        if agent_file:
+            stop_agent()
+        # The PyInstaller parent can retain the executable briefly after the
+        # agent's HTTP listener has closed.
+        deadline = time.monotonic() + 15
+        while True:
+            try:
+                os.replace(temporary, destination)
+                return
+            except PermissionError:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError("旧程序仍在退出，请稍后重新安装。") from None
+                time.sleep(0.25)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+@contextlib.contextmanager
+def installation_lock():
+    """Serialize CLI/GUI changes to this user's files and startup entries."""
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateMutexW.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_wchar_p]
+    kernel.CreateMutexW.restype = ctypes.c_void_p
+    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+    kernel.ReleaseMutex.argtypes = [ctypes.c_void_p]
+    name = "Local\\ICTHubPrinterInstall-" + hashlib.sha256(str(app_dir()).encode()).hexdigest()[:12]
+    mutex = kernel.CreateMutexW(None, True, name)
+    already_running = ctypes.get_last_error() == 183
+    if not mutex:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        if already_running:
+            raise RuntimeError("安装正在进行，请等待当前安装完成。")
+        yield
+    finally:
+        if not already_running:
+            kernel.ReleaseMutex(mutex)
+        kernel.CloseHandle(mutex)
+
+
 def install(*, gui_path: str | None = None):
+    with installation_lock():
+        _install(gui_path=gui_path)
+
+
+def _install(*, gui_path: str | None = None):
     if not getattr(sys, "frozen", False):
         raise RuntimeError("请使用 GitHub Release 中的 EXE 安装程序。")
     login(reuse=True, allow_browser=gui_path is None)
@@ -155,18 +221,19 @@ def install(*, gui_path: str | None = None):
         gui_source = Path(gui_path).resolve(strict=True)
         if gui_source.suffix.lower() != ".exe" or not gui_source.is_file():
             raise RuntimeError("安装程序路径无效，请重新下载安装包。")
-        if gui_source != gui_destination.resolve():
-            temporary_gui = directory / "ICTHubPrinterSetup.new.exe"
-            shutil.copy2(gui_source, temporary_gui)
-            os.replace(temporary_gui, gui_destination)
+        replace_executable(gui_source, gui_destination)
     print("正在安装打印后台…", flush=True)
     destination = directory / "ICTHubPrinter.exe"
     source = Path(sys.executable)
-    if source.resolve() != destination.resolve():
-        stop_agent()
-        temporary = directory / "ICTHubPrinter.new.exe"
-        shutil.copy2(source, temporary)
-        os.replace(temporary, destination)
+    try:
+        replace_executable(source, destination, agent_file=True)
+    except (OSError, RuntimeError):
+        # If upgrading fails after stopping the old agent, leave the previous
+        # installed binary available and restart it. Its mutex prevents a copy.
+        if destination.is_file():
+            subprocess.Popen([str(destination), "agent"], creationflags=subprocess.CREATE_NO_WINDOW,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        raise
     try:
         health = httpx.get(f"http://127.0.0.1:{LOCAL_PORT}/health", timeout=1, trust_env=False)
         if health.json().get("service") != "icthub-printer-agent":
@@ -186,18 +253,9 @@ def install(*, gui_path: str | None = None):
             raise RuntimeError("打印后台未能启动，请查看安装目录内 agent.log。")
         time.sleep(0.5)
     settings = read_settings()
-    print("正在添加 Windows 打印机…", flush=True)
+    print("正在配置 Windows 打印机…", flush=True)
     owned_port = settings.get("port_name", "")
-    configuration = (
-        "[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); "
-        f"$name={psquote(PRINTER_NAME)}; $p=Get-Printer -Name $name -ErrorAction SilentlyContinue; "
-        f"if($p -and $p.PortName -ne {psquote(owned_port)}){{throw 'A different printer already uses this name'}}; "
-        f"if(-not $p){{Add-Printer -Name $name -IppURL {psquote(LOCAL_URL)}; "
-        "$p=Get-Printer -Name $name -ErrorAction Stop}; "
-        "if($p.DriverName -ne 'Microsoft IPP Class Driver'){throw 'Unexpected printer driver'}; "
-        "Set-PrintConfiguration -PrinterName $name -PaperSize A4 -Color $false -DuplexingMode OneSided; "
-        "$p | Select-Object Name,PortName,DriverName | ConvertTo-Json -Compress"
-    )
+    configuration = configure_queue_script(owned_port if isinstance(owned_port, str) else "")
     try:
         output = powershell(configuration)
     except RuntimeError as exc:
@@ -230,6 +288,11 @@ def install(*, gui_path: str | None = None):
 
 
 def uninstall():
+    with installation_lock():
+        _uninstall()
+
+
+def _uninstall():
     settings = read_settings()
     if settings.get("port_name"):
         configuration = (
