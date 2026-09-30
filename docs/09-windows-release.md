@@ -2,6 +2,12 @@
 
 本轮交付范围：C# WPF 图形安装器、Authentik 窗口内登录、Windows 系统打印机、HTTPS 公网打印、GitHub/GitCode 公开 Release 和 Pi 同版本部署。新增公开只读 [状态 API](10-status-api.md)，不做状态网页。DOCX 网页转换与上传页留在后续阶段。
 
+## 新用户注册
+
+RC9 的首页和登录页提供“注册账号”。在安装器中填写用户名、邮箱、密码和确认密码，点击邮件中的验证链接后，返回安装器点击“已验证，登录”。新账号无需管理员逐个审批；该按钮仍执行正常登录与打印准入检查。
+
+注册使用 Authentik 既有公共 Flow，账号资料由账号服务保存；安装器不使用管理 API。注册错误保留输入，进入邮件验证阶段后清空密码。邮件可以手动重发，客户端间隔至少 60 秒。完整注册与邮件验收尚未实测，见 [RC9 记录](verification/windows-rc9-20260930.md)。
+
 ## 数据路径
 
 - 现有 CUPS/ipp-usb/USB 队列保持为唯一实际调度者。
@@ -35,7 +41,7 @@ Authentik 使用本仓库的 `deploy/authentik-hp-printer.yaml`。应用/组/Pro
 
 Windows 后台属于安装用户，使用开始菜单图形登录入口恢复过期授权。IPv4 loopback 18765 为打印桥；GUI 原生登录直接处理严格匹配的回调 URL，不监听 18766，旧 CLI 浏览器登录仍会监听它。后台不接收浏览器跨域请求。公网不开放 CUPS `/admin`；CUPS 本身的原始 P1 IPP 重复属性仍待修复，桥只对输出给 Windows 的重复默认值做兼容处理。
 
-Windows EXE 由版本化构建脚本生成：先 PyInstaller 打包 Python 后台，再使用 .NET 9 SDK 将后台嵌入 WPF 自包含单文件。用户无需另装运行时。GitHub 和 GitCode Release 附同一份 EXE、SHA256 和简短说明。RC3 继续标记为候选版，验收边界见 [RC3 记录](verification/windows-rc3-20260930.md)。
+Windows EXE 由版本化构建脚本生成：先 PyInstaller 打包 Python 后台，再使用 .NET 9 SDK 将后台嵌入 WPF 自包含单文件。用户无需另装运行时。GitHub 和 GitCode Release 附同一份 EXE、SHA256 和简短说明。最新客户端 RC9 继续标记为候选版，验收边界见 [RC9 记录](verification/windows-rc9-20260930.md)；Pi 生产固定 RC3。
 
 ### 同步 Release
 
@@ -45,7 +51,7 @@ Windows EXE 由版本化构建脚本生成：先 PyInstaller 打包 Python 后�
 
 ## 验收约束
 
-- 已激活且已验证邮箱的正常用户通过浏览器登录即可使用；未验证邮箱或已停用的用户不获得新的打印授权。
+- 已激活且已验证邮箱的正常用户登录即可使用；未验证邮箱或已停用的用户不获得新的打印授权。
 - Windows 真实添加系统队列；至少一份合成文档经过公网 HTTPS 路径进入原 CUPS 队列。
 - LAN 和强制公网测试分别记录，强制公网测试不等于实际在校外网络实测。
 - 软件的 CUPS completed 与用户目视出纸分开记录。

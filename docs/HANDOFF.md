@@ -6,7 +6,9 @@
 
 最新 UI 要求：参考 xju-feiyue 的 Notion 风格，减少提示，左栏显示实时打印机状态；实验室名称为“算法与科研实验室”，设备名仍为“算法实验室·惠普打印机”。RC4 / RC5 说明见 [记录](verification/windows-rc4-20260930.md)。这是对 RC3 品牌文案的后续修正。
 
-最新客户端为 RC8，提交 `58fa817454ce02b4ad549cc74cd6ddaf009771cb`。Logo 预导出八档小图并按 DPI 选用，修复输入框重复 Padding 和空消息占位；密码/验证码在提交与错误重试时保留，验证码标题为“动态验证码(Authenticator)”。见 [RC8 记录](verification/windows-rc8-20260930.md)。新交互与跨屏 DPI 待实机验收。
+最新客户端为 RC9，提交 `d48766fd2650be52e424f7b0316463cb0c9aa650`。安装器首页和登录页新增“注册账号”，窗口内填写用户名、邮箱和密码，点击邮件验证链接后返回登录。公共注册 Flow 已只读确认开放；未改生产策略，新账号验证邮箱后按现有规则自动准入。见 [RC9 记录](verification/windows-rc9-20260930.md)。真实注册、邮件收取和 GUI 交互仍待实机验收。
+
+RC8 已导出八档小尺寸 Logo 并按 DPI 选用，输入框紧凑，登录/验证码重试保留输入；标题为“动态验证码(Authenticator)”。见 [RC8 记录](verification/windows-rc8-20260930.md)。跨屏 DPI 待实机验收。
 
 RC7 已按用户要求默认白色 Light 主题，不再跟随系统应用深浅色，继续支持系统高对比度。见 [RC7 记录](verification/windows-rc7-20260930.md)。
 

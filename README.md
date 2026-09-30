@@ -4,7 +4,7 @@
 
 > 已完成真实 Authentik 登录、Windows 系统打印机安装和公网 Windows 系统打印：测试作业被 CUPS 报告 completed，用户已确认很快出纸。Word 实际文档打印和真正校外网络仍待验收。
 
-**图形候选版 v0.1.0-rc.8：[GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.8) · [GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.8)**。下载运行 `ICTHubPrinterSetup.exe`，登录算法与科研实验室账号并安装，可直接覆盖旧版。默认白色 Light 主题，输入框紧凑，登录与验证码重试保留输入，Logo 按显示缩放选用对应小图。账号需已验证邮箱；两端使用同一份 EXE 和 SHA256。图形交互仍待实机验收，见 [RC8 记录](docs/verification/windows-rc8-20260930.md)。
+**图形候选版 v0.1.0-rc.9：[GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.9) · [GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.9)**。运行 `ICTHubPrinterSetup.exe`，新用户点击“注册账号”，完成邮件验证后登录并安装，无需管理员逐个审批。已有账号可直接登录，旧版可覆盖安装。默认白色主题，保留小尺寸 Logo、紧凑表单和重试输入。两端使用同一份 EXE 和 SHA256；完整注册与图形交互仍待实机验收，见 [RC9 记录](docs/verification/windows-rc9-20260930.md)。
 
 **公开状态 API：[GET /v1/status](https://hp.icthub.top/v1/status)**，读取设备状态、缺纸和墨量，不提供状态网页。见[接口说明](docs/10-status-api.md)。
 
