@@ -8,7 +8,9 @@
 
 已实现 C# WPF 自包含安装向导、窗口内 Authentik 账号密码/动态验证码/授权、图形状态及卸载入口。品牌统一“算法实验室”，Logo 使用用户提供图片。Python 打印后台与 Pi 原 CUPS/USB 链路继续保留。
 
-已实现公开只读 `/v1/status` JSON 接口，15 秒缓存，物理设备与 CUPS 状态分别记录，未知墨量为 null。Pi 设备只读查询实际返回彩色 20%、黑色 50%，设备/CUPS 均 idle/none。本轮未运行测试或真人登录/打印，RC3 仍需验收。构建、部署和双端发布事实持续记录在 [RC3 记录](verification/windows-rc3-20260930.md)。以下 RC2/P1 条目是既有基线。
+RC3 已在 GitHub/GitCode 公开发布，同一 EXE（86,702,870 字节）和 SHA256；GitCode 公共下载与 GitHub 文件校验一致。安装包仍未签名。
+
+公开只读 `/v1/status` 已在 Pi 部署并通过公网返回 JSON，15 秒缓存，物理设备与 CUPS 状态分别记录，未知墨量为 null。部署提交 `6c5ac0b`；读数为彩色 20%、黑色 50%，设备/CUPS 均 idle/none。本轮未手动运行测试，推送触发原有 CI 的 40 项检查通过；RC3 真人登录/打印仍需验收。构建、部署和双端发布事实记录在 [RC3 记录](verification/windows-rc3-20260930.md)。以下 RC2/P1 条目是既有基线。
 
 ## 当前状态
 

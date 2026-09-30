@@ -8,6 +8,10 @@
 
 RC3 新代码与构建见 [记录](verification/windows-rc3-20260930.md)。登录 UI 使用 Authentik Flow Executor + PKCE，不监听 18766，Python CLI 的旧浏览器入口保留兼容。新 GUI 真人登录、升级/卸载、Word 和校外网络尚未验收，不要套用 RC2 的成功证据。SignPath 未完成，EXE 尚未签名。
 
+Pi 生产已由 RC2 升级至 `6c5ac0bc296af2f16094ee10f2b42d5c5f6abba2`（0.1.0rc3），`/health` 与公开 `/v1/status` 在线。物理设备和 CUPS 返回空闲、none，彩色 20%/黑色 50%。此处是新基线，下面 RC2 的打印实测仍是历史证据。
+
+GitHub/GitCode 的 `v0.1.0-rc.3` 已公开发布同一 WPF EXE 和校验文件，文件校验见 RC3 记录。维护文档可继续在 main 更新；Pi 生产程序固定在该 tag 对应提交，不因文档提交重新部署。
+
 ## 已落地
 
 - 本地 `/home/winbeau/xju-arlab/hp-printer`，公开仓库 `https://github.com/xju-arlab/hp-printer` 与 `https://gitcode.com/xju-arlab/hp-printer`，主分支 main；本地 remote 分别为 origin/gitcode，Pi 同路径 clone。版本以 GitHub 为准，本地 commit 后推送两端，用 `scripts/sync-pi.sh` 拉取；需要部署代码时再在 Pi 执行 `scripts/install-pi.sh`。RC2 在两端发布相同 EXE/SHA256，镜像不另行构建。
