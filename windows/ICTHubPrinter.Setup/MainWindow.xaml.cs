@@ -42,6 +42,10 @@ public partial class MainWindow : Window
         UsernamePanel.Visibility = PasswordPanel.Visibility = CodePanel.Visibility = Visibility.Collapsed;
         SavedLogin.Visibility = DetailPanel.Visibility = Visibility.Collapsed;
         ErrorText.Text = ProgressText.Text = "";
+    }
+
+    private void ClearLoginInputs()
+    {
         Password.Clear();
         Code.Clear();
     }
@@ -54,6 +58,7 @@ public partial class MainWindow : Window
 
     private void Welcome()
     {
+        ClearLoginInputs();
         Page("welcome", "安装打印机", "", "登录");
         Detail("算法实验室·惠普打印机");
         Secondary.Content = "关闭";
@@ -79,7 +84,16 @@ public partial class MainWindow : Window
             Primary.IsEnabled = Secondary.IsEnabled = SavedLogin.IsEnabled = StatusButton.IsEnabled = UninstallButton.IsEnabled = true;
             Username.IsEnabled = Password.IsEnabled = Code.IsEnabled = true;
             Progress.Visibility = Visibility.Collapsed;
+            ProgressText.Text = "";
+            FocusLoginInput();
         }
+    }
+
+    private void FocusLoginInput()
+    {
+        if (stage == "code") Code.Focus();
+        else if (stage == "password" || (stage == "identity" && PasswordPanel.IsVisible && !string.IsNullOrWhiteSpace(Username.Text))) Password.Focus();
+        else if (stage == "identity") Username.Focus();
     }
 
     private Task<JsonElement> Send(string command, object? values = null) =>
@@ -100,17 +114,14 @@ public partial class MainWindow : Window
                 Page(next, "登录", "", "登录");
                 UsernamePanel.Visibility = Visibility.Visible;
                 if (Flag(result, "password")) PasswordPanel.Visibility = Visibility.Visible;
-                Username.Focus();
                 break;
             case "password":
                 Page(next, "输入密码", "", "继续");
                 PasswordPanel.Visibility = Visibility.Visible;
-                Password.Focus();
                 break;
             case "code":
-                Page(next, "身份验证", "", "验证");
+                Page(next, "动态验证码(Authenticator)", "", "验证");
                 CodePanel.Visibility = Visibility.Visible;
-                Code.Focus();
                 break;
             case "consent":
                 Page(next, "授权打印", "允许此电脑使用你的账号打印。", "允许");
@@ -118,6 +129,7 @@ public partial class MainWindow : Window
                 Detail(string.Join("\n", permissions));
                 break;
             case "authenticated":
+                ClearLoginInputs();
                 if (loginOnly)
                 {
                     Page("done", "已登录", "", "完成");
@@ -148,12 +160,20 @@ public partial class MainWindow : Window
             case "consent":
                 if (stage == "identity" && string.IsNullOrWhiteSpace(Username.Text)) { ErrorText.Text = "请输入账号或邮箱。"; return; }
                 if (PasswordPanel.IsVisible && Password.Password.Length == 0) { ErrorText.Text = "请输入密码。"; return; }
-                if (stage == "code" && Code.Password.Length == 0) { ErrorText.Text = "请输入验证码或恢复码。"; return; }
+                if (stage == "code" && Code.Password.Length == 0) { ErrorText.Text = "请输入动态验证码。"; return; }
                 await Execute(async () =>
                 {
-                    var submission = Send("respond-login", new { username = Username.Text, password = Password.Password, code = Code.Password, accept = stage == "consent" });
-                    Password.Clear(); Code.Clear();
-                    ShowChallenge(await submission);
+                    // Keep typed values through pending requests, validation
+                    // errors and network failures. Send only this stage's fields.
+                    object values = stage switch
+                    {
+                        "identity" => new { username = Username.Text, password = PasswordPanel.IsVisible ? Password.Password : "" },
+                        "password" => new { password = Password.Password },
+                        "code" => new { code = Code.Password },
+                        "consent" => new { accept = true },
+                        _ => throw new InvalidOperationException("请重新登录。"),
+                    };
+                    ShowChallenge(await Send("respond-login", values));
                 });
                 break;
             case "ready":
@@ -193,12 +213,14 @@ public partial class MainWindow : Window
 
     private void ShowUninstall()
     {
+        ClearLoginInputs();
         Page("uninstall", "卸载打印机", "移除本机打印机、登录信息和开机启动。", "卸载");
         Detail("算法实验室·惠普打印机");
     }
 
     private Task ShowStatus() => Execute(async () =>
     {
+        ClearLoginInputs();
         Page("status", "本机状态", "", "刷新");
         var result = await Send("status");
         var route = Text(result, "route") switch { "lan" => "实验室内网", "remote" => "公网", _ => "—" };
@@ -228,6 +250,7 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        ClearLoginInputs();
         StopTelemetry();
         Theme.Changed -= ApplyWindowTheme;
         base.OnClosed(e);

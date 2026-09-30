@@ -8,12 +8,14 @@ namespace ICTHubPrinter.Setup;
 
 public partial class MainWindow
 {
-    private readonly BitmapImage printerMask = new(new Uri("pack://application:,,,/Assets/printer.png"));
+    private static readonly int[] logoSizes = [48, 60, 72, 96, 120, 144, 192];
+    private int logoPixelSize;
 
     private void InitializeTheme()
     {
         Theme.Changed += ApplyWindowTheme;
         SourceInitialized += (_, _) => ApplyWindowTheme();
+        DpiChanged += (_, args) => UpdateLogoForDpi(args.NewDpi.DpiScaleX);
         ApplyWindowTheme();
     }
 
@@ -21,19 +23,10 @@ public partial class MainWindow
 
     private void ApplyWindowTheme()
     {
-        // Tint the provided transparent shape at render time; preserve its pixels.
-        var visual = new DrawingVisual();
-        using (var drawing = visual.RenderOpen())
-        {
-            drawing.PushOpacityMask(new ImageBrush(printerMask) { Stretch = Stretch.Uniform });
-            drawing.DrawRectangle(UiBrush("Ink"), null, new Rect(0, 0, 64, 64));
-            drawing.Pop();
-        }
-        var icon = new RenderTargetBitmap(64, 64, 96, 96, PixelFormats.Pbgra32);
-        icon.Render(visual);
-        icon.Freeze();
-        Icon = icon;
+        // The window uses the original multi-size ICO, avoiding a second resize
+        // of a 64 px intermediate bitmap for the small caption icon.
         UpdateTelemetryColors();
+        UpdateLogoForDpi();
 
         var handle = new WindowInteropHelper(this).Handle;
         if (handle == IntPtr.Zero || !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000)) return;
@@ -41,6 +34,17 @@ public partial class MainWindow
         DwmSetWindowAttribute(handle, 34, ref border, sizeof(uint));
         DwmSetWindowAttribute(handle, 35, ref caption, sizeof(uint));
         DwmSetWindowAttribute(handle, 36, ref text, sizeof(uint));
+    }
+
+    private void UpdateLogoForDpi(double? scale = null)
+    {
+        var pixels = (int)Math.Ceiling(LabLogo.Width * (scale ?? VisualTreeHelper.GetDpi(this).DpiScaleX));
+        var size = logoSizes.FirstOrDefault(value => value >= pixels, logoSizes[^1]);
+        if (size == logoPixelSize) return;
+        var image = new BitmapImage(new Uri($"pack://application:,,,/Assets/Logo/lab-logo-{size}.png"));
+        image.Freeze();
+        LabLogo.Source = image;
+        logoPixelSize = size;
     }
 
     private uint WindowColor(string name)

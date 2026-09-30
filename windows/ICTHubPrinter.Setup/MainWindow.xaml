@@ -1,5 +1,5 @@
 <Window x:Class="ICTHubPrinter.Setup.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="算法与科研实验室 · 打印机" Width="840" Height="610" MinWidth="720" MinHeight="560" WindowStartupLocation="CenterScreen"
+        Title="算法与科研实验室 · 打印机" Icon="Assets/printer.ico" Width="840" Height="610" MinWidth="720" MinHeight="560" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI, Microsoft YaHei UI" FontSize="14" Background="{DynamicResource Canvas}" Foreground="{DynamicResource Ink}"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
   <Grid>
@@ -9,12 +9,13 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <StackPanel>
           <StackPanel Orientation="Horizontal" Margin="0,4,0,34">
-            <Image Source="Assets/lab-logo.png" Width="36" Height="36" Stretch="Uniform" Margin="0,0,10,0" AutomationProperties.Name="算法与科研实验室 Logo"/>
+            <Image x:Name="LabLogo" Source="Assets/Logo/lab-logo-48.png" Width="48" Height="48" Stretch="Uniform" Margin="0,0,10,0"
+                   RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True" AutomationProperties.Name="算法与科研实验室 Logo"/>
             <TextBlock Text="算法与科研实验室" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal">
             <Rectangle Width="18" Height="18" Fill="{DynamicResource Ink}" Margin="0,0,8,0">
-              <Rectangle.OpacityMask><ImageBrush ImageSource="Assets/printer.png" Stretch="Uniform"/></Rectangle.OpacityMask>
+              <Rectangle.OpacityMask><ImageBrush ImageSource="Assets/printer.png" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/></Rectangle.OpacityMask>
             </Rectangle>
             <TextBlock Text="惠普打印机" FontSize="14" FontWeight="SemiBold"/>
           </StackPanel>
@@ -64,15 +65,15 @@
           <PasswordBox x:Name="Password" MaxLength="4096" AutomationProperties.Name="密码"/>
         </StackPanel>
         <StackPanel x:Name="CodePanel" Visibility="Collapsed" Margin="0,0,0,18">
-          <Label Content="动态验证码或恢复码" Target="{Binding ElementName=Code}" Padding="0,0,0,7"/>
-          <PasswordBox x:Name="Code" MaxLength="128" AutomationProperties.Name="动态验证码或恢复码"/>
+          <Label Content="验证码" Target="{Binding ElementName=Code}" Padding="0,0,0,7"/>
+          <PasswordBox x:Name="Code" MaxLength="128" AutomationProperties.Name="动态验证码(Authenticator)"/>
         </StackPanel>
         <Border x:Name="DetailPanel" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="6" Padding="16" Visibility="Collapsed" Margin="0,0,0,18">
           <TextBlock x:Name="Details" LineHeight="25" FontSize="13"/>
         </Border>
         <ProgressBar x:Name="Progress" IsIndeterminate="True" Height="2" Visibility="Collapsed" Foreground="{DynamicResource Muted}" Background="{DynamicResource Line}" Margin="0,0,0,12"/>
-        <TextBlock x:Name="ProgressText" Foreground="{DynamicResource Muted}" LineHeight="22" FontSize="12"/>
-        <TextBlock x:Name="ErrorText" Foreground="{DynamicResource Error}" LineHeight="22" FontSize="13" AutomationProperties.LiveSetting="Assertive"/>
+        <TextBlock x:Name="ProgressText" Style="{StaticResource OptionalMessage}" Foreground="{DynamicResource Muted}" LineHeight="22" FontSize="12"/>
+        <TextBlock x:Name="ErrorText" Style="{StaticResource OptionalMessage}" Foreground="{DynamicResource Error}" LineHeight="22" FontSize="13" AutomationProperties.LiveSetting="Assertive"/>
         <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
           <Button x:Name="Primary" Content="登录" Click="Primary_Click" IsDefault="True" MinWidth="108"/>
           <Button x:Name="Secondary" Content="返回" Click="Secondary_Click" Background="{DynamicResource Canvas}" BorderBrush="{DynamicResource LineStrong}" Foreground="{DynamicResource Muted}" Margin="10,0,0,0"/>

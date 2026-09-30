@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $repo
 & (Join-Path $PSScriptRoot 'build-app-icon.ps1')
+& (Join-Path $PSScriptRoot 'build-lab-logos.ps1')
 if (-not [IO.Path]::IsPathRooted($OutputDirectory)) { $OutputDirectory = Join-Path $repo $OutputDirectory }
 if (-not $env:UV_PROJECT_ENVIRONMENT) {
     $env:UV_PROJECT_ENVIRONMENT = Join-Path $env:LOCALAPPDATA 'ICTHubPrinterBuild\venv'
