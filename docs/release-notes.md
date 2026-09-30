@@ -2,6 +2,8 @@
 
 Windows 打印机名称：**算法实验室·惠普打印机**。请使用 RC2；RC1 存在已修复的登录验证与 Windows 接入问题。
 
+公开下载：[GitHub Release](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2) · [GitCode Release](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2)。两端仓库均为 public，提供相同 EXE 与 SHA256；安装登录和公网打印需要已获授权的 ICTHub 账号、已验证邮箱及打印授权组。实验室内网保持直接打印。
+
 ## 已完成
 
 - winbeau 通过真实浏览器 PKCE 登录，邮箱和打印组准入通过；凭据由当前用户 DPAPI 加密保存。

@@ -4,11 +4,11 @@
 
 ## 当前目标与范围
 
-用户将以下内容提前：Windows EXE 安装器、Authentik 登录与邮箱/打印组准入、校外 Word Ctrl+P、私有 GitHub Release、本地和 Pi 版本同步。纯 Python + uv，无前端工程，无 HP 专有驱动安装。网页上传、DOCX 转换/字体和完整 CLI 队列管理仍为后续阶段。
+用户将以下内容提前：Windows EXE 安装器、Authentik 登录与邮箱/打印组准入、校外 Word Ctrl+P、GitHub/GitCode 公开仓库与 Release、本地和 Pi 版本同步。用户已明确改为公开下载，打印准入由 ICTHub 账号执行；实验室内网保持直接打印。纯 Python + uv，无前端工程，无 HP 专有驱动安装。网页上传、DOCX 转换/字体和完整 CLI 队列管理仍为后续阶段。
 
 ## 已落地
 
-- 本地 `/home/winbeau/xju-arlab/hp-printer`，私有仓库 `https://github.com/xju-arlab/hp-printer`，主分支 main；Pi 同路径 clone。版本以 GitHub 为准，本地 commit/push 后用 `scripts/sync-pi.sh` 拉取，再在 Pi 执行 `scripts/install-pi.sh`。
+- 本地 `/home/winbeau/xju-arlab/hp-printer`，公开仓库 `https://github.com/xju-arlab/hp-printer` 与 `https://gitcode.com/xju-arlab/hp-printer`，主分支 main；本地 remote 分别为 origin/gitcode，Pi 同路径 clone。版本以 GitHub 为准，本地 commit 后推送两端，用 `scripts/sync-pi.sh` 拉取；需要部署代码时再在 Pi 执行 `scripts/install-pi.sh`。RC2 在两端发布相同 EXE/SHA256，镜像不另行构建。
 - Pi `winbeau@192.168.5.87`，主机 fourb，Ubuntu 24.04.4 arm64。原 `HP_DeskJet_4900 → ipp://localhost:60000/ipp/print → USB` 保留。P1 备份 `/home/winbeau/hp-printer-backups/p1-20260929/`。
 - CUPS 只在 loopback 和 WLAN 192.168.5.87:631 服务；192.168.5.0/24 直接打印，管理页面限 loopback，ipp-usb 外部端口有 nftables 保护。WLAN DHCP 保留仍未确认。
 - Python 网关由 systemd `hp-printer.service` 运行，监听 127.0.0.1:8765。现有 Cloudflare Tunnel 将 hp.icthub.top 转发至此。`/health` 已公网返回 200，匿名 IPP 返回 401。

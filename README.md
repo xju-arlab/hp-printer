@@ -4,7 +4,7 @@
 
 > 已完成真实 Authentik 登录、Windows 系统打印机安装和公网 Windows 系统打印：测试作业被 CUPS 报告 completed，用户已确认很快出纸。Word 实际文档打印和真正校外网络仍待验收。
 
-**[下载私有候选版 v0.1.0-rc.2](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2)**：EXE 与 SHA256，需有仓库访问权限。请使用 RC2，修复了 RC1 的登录验证和 Windows 接入问题。
+**下载公开候选版 v0.1.0-rc.2：[GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2) · [GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2)**。两端提供同一份 EXE 与 SHA256，下载无需仓库授权。安装登录与公网打印由 ICTHub 账号、已验证邮箱和打印授权组控制。请使用 RC2，修复了 RC1 的登录验证和 Windows 接入问题。
 
 ```text
 Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────────┐
@@ -30,4 +30,4 @@ Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────�
 
 Windows 安装包目标设备名为 **算法实验室·惠普打印机**。安装时通过浏览器登录 ICTHub，需已验证邮箱及打印授权组；凭据使用当前用户 DPAPI 加密。内网优先直连指定 Pi，公网通过现有 `hp.icthub.top` HTTP Tunnel，无需客户端 cloudflared。DOCX 上传转换留到后续。
 
-版本以私有仓库 [xju-arlab/hp-printer](https://github.com/xju-arlab/hp-printer) 为准：本地提交推送，再用 `bash scripts/sync-pi.sh` 拉取到 Pi，最后执行部署脚本。详见 [运维说明](docs/09-windows-release.md)。
+公开仓库：[GitHub](https://github.com/xju-arlab/hp-printer) · [GitCode](https://gitcode.com/xju-arlab/hp-printer)。版本以 GitHub 为准，GitCode 同步 main、标签和候选版发布文件：本地提交推送两端，再用 `bash scripts/sync-pi.sh` 拉取到 Pi；代码部署按版本另行执行。详见 [运维说明](docs/09-windows-release.md)。
