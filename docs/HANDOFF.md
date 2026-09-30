@@ -14,13 +14,13 @@
 - Python 网关由 systemd `hp-printer.service` 运行，监听 127.0.0.1:8765。现有 Cloudflare Tunnel 将 hp.icthub.top 转发至此。`/health` 已公网返回 200，匿名 IPP 返回 401。
 - Authentik 位于 huawei2 的 Docker 部署。本仓库 `deploy/authentik-hp-printer.yaml` 已应用并作为数据库 BlueprintInstance 持久化。用户指定 `winbeau` 为首个打印授权成员，已加入 hp-printer-users。相邻 auth-login 工作区已有未提交变更，不修改它。
 - Windows 安装器使用 public OIDC client + PKCE，回调 127.0.0.1:18766；当前用户 DPAPI 保存令牌。后台桥 127.0.0.1:18765，优先探测 LAN CUPS UUID，其他情况通过 HTTPS 公网网关；无需客户端 cloudflared。
-- 目标 Windows 设备名“算法实验室·惠普打印机”，内置 Microsoft IPP Class Driver，当前用户登录时自动启动。安装器代码和 EXE 构建已完成，真实用户登录流程尚待完成。
-- 私有 Release v0.1.0-rc.1 已发布，含 GitHub 构建并核对 SHA256 的 EXE。该标签固定 dc74df4，后续文档记录继续同步 main；不得将候选版写成通过 Windows 端到端验收。
+- Windows 已安装“算法实验室·惠普打印机”，内置 Microsoft IPP Class Driver。真实登录、授权刷新、Startup 快捷方式恢复已验证，默认仍为原 USB 打印机。端口 WSD-d4e26a22-14b1-4ca0-8bad-cb9428791b98。
+- 已完成一页公网 Windows 系统打印：Windows job 5 → remote → CUPS job 4，Get-Job-Attributes 返回 completed。测试后已恢复内网优先。RC2（0.1.0rc2）修复并替代 RC1；旧标签和资产保留。
 - 既有 Windows P1 队列 `HP DeskJet 4900 (Pi CUPS)` 已实际打印，用户确认出纸。这个事实不能替代新安装器和公网路径验收。原 USB 默认打印机不更改。
 
 ## 验收与已知限制
 
-详细证据以 [本轮记录](verification/windows-release-20260929.md) 为准。首次浏览器授权等待超时，不能把新版打印机安装或公网 Word 打印标为完成。下一步让用户在系统浏览器完成 winbeau 登录，检查新队列、后台自启/刷新、LAN 与强制公网的合成文档；实物出纸另由用户确认。
+详细证据以 [RC2 实测](verification/windows-rc2-20260930.md) 为准。登录、安装、公网系统打印、自启和刷新已验证。Word 自动化保存失败/未完成，未执行到 Word PrintOut；需用户手动 Ctrl+P 验收。新测试纸和字体完整性还需目视确认；实际校外网络另测。不要把 GDI 系统打印成功写成 Word 已打印成功。
 
 公网限制每次 IPP 请求 80 MiB；账号须有已验证邮箱与打印组。服务端检查 JWT 和作业所有权，不信任客户端自报用户名。已提交请求失败后不自动换路重发。CUPS 是唯一调度者。
 
@@ -32,6 +32,8 @@ CUPS 生产响应重复 media-default/sides-default 尚未根治，Windows 桥�
 
 生产使用 `/opt/hp-printer/releases/<commit>` 不可变目录和 current 链接，uv --locked 安装；健康检查失败回退上个版本。GitHub 标签流水线先构建草稿 Release，审核真实验收结果后发布。
 
+本次 Windows 的 wsl.exe 启动命令挂起，WSL 文件系统与 SSH 服务仍正常；可通过 `ssh -p 2222 winbeau@127.0.0.1` 进入同一个 WSL，再调用 tmux helper 和同步脚本。不要重启 WSL 或终止其他项目进程。Windows Git 使用单次 safe.directory 参数处理 UNC 所有权检查。
+
 ## 后续继续提示
 
-> 先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md、docs/progress.md 和本轮实测记录。私有候选版 v0.1.0-rc.1 已发布，继续完成 Windows 登录、安装、公网 Word 打印验收，通过后发布稳定版；保持本地、GitHub、Pi 的 main 相同提交。随后再逐阶段补齐 CLI 打印和队列管理，不重建 CUPS/USB、不引入前端，也不把待验收项写成完成。
+> 先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md、docs/progress.md 和 RC2 实测记录。登录、Windows 安装及公网系统打印已通过；继续确认测试纸、人工 Word Ctrl+P 和实际校外网络，再发布稳定版。保持本地、GitHub、Pi 的 main 对齐，逐阶段补齐 CLI 打印和队列管理。

@@ -2,9 +2,9 @@
 
 树莓派 4B 打印网关：**纯 Python 后端，使用 uv 管理项目，提供 CLI 打印和队列管理命令**。以 USB 连接 HP DeskJet 4900 series，向局域网 Windows 提供系统打印机入口。
 
-> 当前已有 Python + uv 工程、Authentik 公网 IPP 网关和 Windows EXE 安装程序。网关已部署；新版安装器的真实账号登录、系统队列添加和公网 Word 打印仍待验收。此前 P1 的 LAN 测试页已由用户确认出纸。
+> 已完成真实 Authentik 登录、Windows 系统打印机安装和公网 Windows 系统打印：测试作业被 CUPS 报告 completed。新测试纸目视确认、Word 实际文档打印和真正校外网络仍待验收。
 
-**[下载私有候选版 v0.1.0-rc.1](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.1)**：EXE 与 SHA256 已发布，需有仓库访问权限。候选版尚未完成真实账号和 Windows 打印验收。
+**[下载私有候选版 v0.1.0-rc.2](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2)**：EXE 与 SHA256，需有仓库访问权限。请使用 RC2，修复了 RC1 的登录验证和 Windows 接入问题。
 
 ```text
 Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────────┐
@@ -22,6 +22,7 @@ Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────�
 - [CLI 与 uv 工程设计](docs/08-cli-and-uv.md)
 - [Windows 安装与公网方案](docs/09-windows-release.md)
 - [本轮部署与验收记录](docs/verification/windows-release-20260929.md)
+- [RC2 真实登录、安装与公网作业](docs/verification/windows-rc2-20260930.md)
 
 项目采用根目录 `pyproject.toml`、`uv.lock` 和 `src/hp_printer/` 布局，不包含前端工程。当前可用 `uv run hp-printer --help`、`--version`、`doctor` 和 `serve --config config.example.toml`。`print`、`jobs` 和管理员队列控制仍按后续阶段实现。
 
