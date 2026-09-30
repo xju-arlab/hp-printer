@@ -6,7 +6,7 @@
 
 ## RC7 默认浅色
 
-按用户最新要求，安装器默认使用白色 Light 主题，停止跟随 Windows 应用深浅色；图标和 Windows 11 标题栏采用浅色配色，保留系统高对比度支持。延续 RC6 覆盖安装逻辑。构建与发布记录见 [RC7](verification/windows-rc7-20260930.md)。
+按用户最新要求，安装器默认使用白色 Light 主题，停止跟随 Windows 应用深浅色；图标和 Windows 11 标题栏采用浅色配色，保留系统高对比度支持。延续 RC6 覆盖安装逻辑。Windows 构建和既有 40 项检查通过，两端 Release 已发布；未执行 GUI 实机验收。构建与发布记录见 [RC7](verification/windows-rc7-20260930.md)。
 
 ## RC6 重复安装
 
