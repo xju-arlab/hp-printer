@@ -19,7 +19,7 @@
 | P1 其他待验收 | 稳定 WLAN 地址、IPP Get-Jobs/Get-Job 权限、Word/PDF、protected print 和更多客户端未验证 |
 | Python + uv 基础 | 已实现包、锁文件、help/version、doctor、serve；完整队列/文件 CLI 待实现 |
 | 公网网关 | 已部署，HTTPS health 200，匿名 IPP 401，原 CUPS/USB 保留 |
-| Authentik | winbeau 真实浏览器登录和公网准入已通过，凭据由当前用户 DPAPI 加密 |
+| Authentik | 公共注册已开放；所有已激活且已验证邮箱的账号自动获得打印准入，无需管理员逐个审批；RC2 兼容 |
 | Windows EXE | RC2 已完成安装；新命名队列使用内置 IPP 驱动，启动项和卸载入口已配置 |
 | 公网 Windows 打印 | Windows job 5 → 公网 → CUPS job 4，CUPS completed；用户已确认测试页很快出纸，Word 文档和实际校外网络待验收 |
 | GitHub / GitCode / Pi | 两端同名仓库公开，main/标签同步；RC2 同一 EXE 和 SHA256 双端发布，Pi 拉取 main；账号负责打印准入 |
