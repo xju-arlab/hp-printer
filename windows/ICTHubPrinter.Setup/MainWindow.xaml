@@ -57,12 +57,21 @@
         <TextBlock x:Name="Heading" FontSize="26" FontWeight="SemiBold" Text="安装打印机" Margin="0,0,0,26"/>
         <TextBlock x:Name="Description" Foreground="{DynamicResource Muted}" LineHeight="22" Margin="0,-12,0,24" Visibility="Collapsed"/>
         <StackPanel x:Name="UsernamePanel" Visibility="Collapsed" Margin="0,0,0,18">
-          <Label Content="账号或邮箱" Target="{Binding ElementName=Username}" Padding="0,0,0,7"/>
+          <Label x:Name="UsernameLabel" Content="账号或邮箱" Target="{Binding ElementName=Username}" Padding="0,0,0,7"/>
           <TextBox x:Name="Username" MaxLength="254" AutomationProperties.Name="账号或邮箱"/>
+        </StackPanel>
+        <StackPanel x:Name="EmailPanel" Visibility="Collapsed" Margin="0,0,0,18">
+          <Label Content="邮箱" Target="{Binding ElementName=Email}" Padding="0,0,0,7"/>
+          <TextBox x:Name="Email" MaxLength="254" AutomationProperties.Name="邮箱"/>
         </StackPanel>
         <StackPanel x:Name="PasswordPanel" Visibility="Collapsed" Margin="0,0,0,18">
           <Label Content="密码" Target="{Binding ElementName=Password}" Padding="0,0,0,7"/>
           <PasswordBox x:Name="Password" MaxLength="4096" AutomationProperties.Name="密码"/>
+          <TextBlock x:Name="RegistrationPasswordHint" Text="至少 8 位，包含字母和数字" FontSize="12" Foreground="{DynamicResource Muted}" Margin="0,6,0,0" Visibility="Collapsed"/>
+        </StackPanel>
+        <StackPanel x:Name="PasswordRepeatPanel" Visibility="Collapsed" Margin="0,0,0,18">
+          <Label Content="确认密码" Target="{Binding ElementName=PasswordRepeat}" Padding="0,0,0,7"/>
+          <PasswordBox x:Name="PasswordRepeat" MaxLength="4096" AutomationProperties.Name="确认密码"/>
         </StackPanel>
         <StackPanel x:Name="CodePanel" Visibility="Collapsed" Margin="0,0,0,18">
           <Label Content="验证码" Target="{Binding ElementName=Code}" Padding="0,0,0,7"/>
@@ -79,6 +88,8 @@
           <Button x:Name="Secondary" Content="返回" Click="Secondary_Click" Background="{DynamicResource Canvas}" BorderBrush="{DynamicResource LineStrong}" Foreground="{DynamicResource Muted}" Margin="10,0,0,0"/>
         </StackPanel>
         <Button x:Name="SavedLogin" Content="使用已登录账号" Click="SavedLogin_Click" Style="{StaticResource QuietButton}" HorizontalAlignment="Left" Padding="0,10" Margin="0,6,0,0"/>
+        <Button x:Name="RegisterButton" Content="注册账号" Click="Register_Click" Style="{StaticResource QuietButton}" HorizontalAlignment="Left" Padding="0,8" Margin="0,4,0,0" Visibility="Collapsed"/>
+        <Button x:Name="ResendButton" Content="重新发送邮件" Click="Resend_Click" Style="{StaticResource QuietButton}" HorizontalAlignment="Left" Padding="0,8" Margin="0,4,0,0" Visibility="Collapsed"/>
       </StackPanel>
     </ScrollViewer>
   </Grid>

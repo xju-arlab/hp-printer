@@ -40,6 +40,10 @@ public partial class MainWindow : Window
         Secondary.Content = "返回";
         Secondary.Visibility = Visibility.Visible;
         UsernamePanel.Visibility = PasswordPanel.Visibility = CodePanel.Visibility = Visibility.Collapsed;
+        EmailPanel.Visibility = PasswordRepeatPanel.Visibility = RegistrationPasswordHint.Visibility = Visibility.Collapsed;
+        RegisterButton.Visibility = ResendButton.Visibility = Visibility.Collapsed;
+        UsernameLabel.Content = "账号或邮箱";
+        Username.MaxLength = 254;
         SavedLogin.Visibility = DetailPanel.Visibility = Visibility.Collapsed;
         ErrorText.Text = ProgressText.Text = "";
     }
@@ -48,6 +52,7 @@ public partial class MainWindow : Window
     {
         Password.Clear();
         Code.Clear();
+        PasswordRepeat.Clear();
     }
 
     private void Detail(string text)
@@ -64,6 +69,7 @@ public partial class MainWindow : Window
         Secondary.Content = "关闭";
         var credentials = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ICTHubPrinter", "credentials.dpapi");
         SavedLogin.Visibility = File.Exists(credentials) ? Visibility.Visible : Visibility.Collapsed;
+        RegisterButton.Visibility = Visibility.Visible;
     }
 
     private async Task Execute(Func<Task> action, bool installation = false)
@@ -73,6 +79,7 @@ public partial class MainWindow : Window
         changingInstallation = installation;
         Primary.IsEnabled = Secondary.IsEnabled = SavedLogin.IsEnabled = StatusButton.IsEnabled = UninstallButton.IsEnabled = false;
         Username.IsEnabled = Password.IsEnabled = Code.IsEnabled = false;
+        Email.IsEnabled = PasswordRepeat.IsEnabled = RegisterButton.IsEnabled = ResendButton.IsEnabled = false;
         ErrorText.Text = "";
         Progress.Visibility = Visibility.Visible;
         try { await action(); }
@@ -83,6 +90,7 @@ public partial class MainWindow : Window
             busy = changingInstallation = false;
             Primary.IsEnabled = Secondary.IsEnabled = SavedLogin.IsEnabled = StatusButton.IsEnabled = UninstallButton.IsEnabled = true;
             Username.IsEnabled = Password.IsEnabled = Code.IsEnabled = true;
+            Email.IsEnabled = PasswordRepeat.IsEnabled = RegisterButton.IsEnabled = ResendButton.IsEnabled = true;
             Progress.Visibility = Visibility.Collapsed;
             ProgressText.Text = "";
             FocusLoginInput();
@@ -91,7 +99,14 @@ public partial class MainWindow : Window
 
     private void FocusLoginInput()
     {
-        if (stage == "code") Code.Focus();
+        if (stage == "registration")
+        {
+            if (string.IsNullOrWhiteSpace(Username.Text)) Username.Focus();
+            else if (string.IsNullOrWhiteSpace(Email.Text)) Email.Focus();
+            else if (Password.Password.Length == 0) Password.Focus();
+            else PasswordRepeat.Focus();
+        }
+        else if (stage == "code") Code.Focus();
         else if (stage == "password" || (stage == "identity" && PasswordPanel.IsVisible && !string.IsNullOrWhiteSpace(Username.Text))) Password.Focus();
         else if (stage == "identity") Username.Focus();
     }
@@ -114,6 +129,20 @@ public partial class MainWindow : Window
                 Page(next, "登录", "", "登录");
                 UsernamePanel.Visibility = Visibility.Visible;
                 if (Flag(result, "password")) PasswordPanel.Visibility = Visibility.Visible;
+                RegisterButton.Visibility = Visibility.Visible;
+                break;
+            case "registration":
+                Page(next, "注册账号", "", "注册");
+                UsernameLabel.Content = "用户名";
+                Username.MaxLength = 32;
+                UsernamePanel.Visibility = EmailPanel.Visibility = PasswordPanel.Visibility = PasswordRepeatPanel.Visibility = Visibility.Visible;
+                RegistrationPasswordHint.Visibility = Visibility.Visible;
+                break;
+            case "registration-email":
+                ClearLoginInputs();
+                Page(next, "验证邮箱", "点击邮件中的验证链接，完成后返回登录。", "已验证，登录");
+                Detail(Email.Text.Trim());
+                ResendButton.Visibility = Visibility.Visible;
                 break;
             case "password":
                 Page(next, "输入密码", "", "继续");
@@ -154,6 +183,18 @@ public partial class MainWindow : Window
         switch (stage)
         {
             case "welcome": await StartLogin(); break;
+            case "registration":
+                if (string.IsNullOrWhiteSpace(Username.Text)) { ErrorText.Text = "请输入用户名。"; return; }
+                if (string.IsNullOrWhiteSpace(Email.Text)) { ErrorText.Text = "请输入邮箱。"; return; }
+                if (Password.Password.Length == 0) { ErrorText.Text = "请输入密码。"; return; }
+                if (PasswordRepeat.Password != Password.Password) { ErrorText.Text = "两次密码不一致。"; return; }
+                await Execute(async () => ShowChallenge(await Send("submit-registration", new
+                {
+                    username = Username.Text, email = Email.Text,
+                    password = Password.Password, password_repeat = PasswordRepeat.Password,
+                })));
+                break;
+            case "registration-email": await StartLogin(); break;
             case "identity":
             case "password":
             case "code":
@@ -208,6 +249,15 @@ public partial class MainWindow : Window
     }
 
     private async void SavedLogin_Click(object sender, RoutedEventArgs e) => await Execute(async () => ShowChallenge(await Send("reuse-login")));
+    private async void Register_Click(object sender, RoutedEventArgs e) => await Execute(async () =>
+    {
+        ClearLoginInputs();
+        Username.Clear();
+        Email.Clear();
+        ShowChallenge(await Send("start-registration"));
+    });
+    private async void Resend_Click(object sender, RoutedEventArgs e) =>
+        await Execute(async () => ShowChallenge(await Send("resend-registration")));
     private async void Status_Click(object sender, RoutedEventArgs e) => await ShowStatus();
     private void Uninstall_Click(object sender, RoutedEventArgs e) => ShowUninstall();
 

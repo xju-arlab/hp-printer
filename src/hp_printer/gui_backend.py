@@ -9,6 +9,7 @@ import httpx
 from .auth import AuthError
 from .config import LOCAL_PORT, PUBLIC_URL
 from .native_auth import NativeLogin
+from .native_registration import NativeRegistration
 from .windows import authorize_tokens, install, login, read_settings, uninstall
 
 
@@ -28,9 +29,11 @@ def run():
             pass
 
     session = None
+    registration = None
     try:
-        while line := sys.stdin.readline(16385):
-            if len(line) > 16384:
+        # Two password fields can require up to 48 KiB when JSON escapes Unicode.
+        while line := sys.stdin.readline(65537):
+            if len(line) > 65536:
                 break
             try:
                 request = json.loads(line)
@@ -38,12 +41,27 @@ def run():
                 values = request.get("values") or {}
                 with contextlib.redirect_stdout(Progress()):
                     if command == "start-login":
+                        if registration:
+                            registration.close()
+                            registration = None
                         if session:
                             session.close()
                         session = NativeLogin()
                         result = session.start()
                     elif command == "respond-login" and session:
                         result = session.respond(values)
+                    elif command == "start-registration":
+                        if session:
+                            session.close()
+                            session = None
+                        if registration:
+                            registration.close()
+                        registration = NativeRegistration()
+                        result = registration.start()
+                    elif command == "submit-registration" and registration:
+                        result = registration.submit(values)
+                    elif command == "resend-registration" and registration:
+                        result = registration.resend()
                     elif command == "reuse-login":
                         identity = login(reuse=True, allow_browser=False)
                         result = {"stage": "authenticated", "username": identity.get("username", "")}
@@ -93,3 +111,5 @@ def run():
     finally:
         if session:
             session.close()
+        if registration:
+            registration.close()
