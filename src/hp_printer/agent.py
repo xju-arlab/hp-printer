@@ -52,13 +52,13 @@ class Routing:
         self.probed_at = 0.0
         self.lock = asyncio.Lock()
         try:
-            self.pins = json.loads((directory / "routes.json").read_text())
+            self.pins = json.loads((directory / "routes.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             self.pins = {}
 
     def remote_only(self):
         try:
-            return json.loads((self.directory / "settings.json").read_text()).get("remote_only", False) is True
+            return json.loads((self.directory / "settings.json").read_text(encoding="utf-8")).get("remote_only", False) is True
         except (OSError, ValueError):
             return False
 

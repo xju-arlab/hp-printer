@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import httpx
 from fastapi.testclient import TestClient
@@ -6,6 +7,14 @@ from fastapi.testclient import TestClient
 from hp_printer.agent import Routing, create_agent
 from hp_printer.config import CUPS_UUID, LOCAL_PORT
 from hp_printer.ipp import Attribute, Group, request
+
+
+def test_unicode_settings_preserve_remote_mode(tmp_path):
+    (tmp_path / "settings.json").write_text(
+        json.dumps({"printer_name": "算法实验室·惠普打印机", "remote_only": True}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    assert Routing(tmp_path).remote_only() is True
 
 
 def printer_reply(uuid):
