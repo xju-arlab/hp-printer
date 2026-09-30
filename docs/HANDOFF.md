@@ -4,6 +4,8 @@
 
 ## 当前目标与范围
 
+最新 UI 要求：参考 xju-feiyue 的 Notion 风格，减少提示，左栏显示实时打印机状态；实验室名称为“算法与科研实验室”，设备名仍为“算法实验室·惠普打印机”。RC4 说明见 [记录](verification/windows-rc4-20260930.md)。这是对 RC3 品牌文案的后续修正。
+
 用户将以下内容提前：Windows EXE 安装器、Authentik 登录与邮箱验证、校外 Word Ctrl+P、GitHub/GitCode 公开仓库与 Release、本地和 Pi 版本同步。用户已明确改为公开下载，打印准入由账号执行；实验室内网保持直接打印。最新要求为 C# WPF 图形安装器、窗口内登录，品牌统一“算法实验室”，采用用户 Logo；Pi/打印桥继续 Python + uv。用户明确 `/v1/status` 是状态 API，不做状态页。网页上传、DOCX 转换/字体和完整 CLI 队列管理仍为后续阶段。
 
 RC3 新代码与构建见 [记录](verification/windows-rc3-20260930.md)。登录 UI 使用 Authentik Flow Executor + PKCE，不监听 18766，Python CLI 的旧浏览器入口保留兼容。新 GUI 真人登录、升级/卸载、Word 和校外网络尚未验收，不要套用 RC2 的成功证据。SignPath 未完成，EXE 尚未签名。

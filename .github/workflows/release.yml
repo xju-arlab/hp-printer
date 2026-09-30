@@ -29,4 +29,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
-        run: gh release create $env:GITHUB_REF_NAME dist/ICTHubPrinterSetup.exe dist/SHA256SUMS.txt --draft --verify-tag --title "算法实验室打印机 $env:GITHUB_REF_NAME" --notes-file docs/release-notes.md
+        run: gh release create $env:GITHUB_REF_NAME dist/ICTHubPrinterSetup.exe dist/SHA256SUMS.txt --draft --verify-tag --title "实验室打印机 $env:GITHUB_REF_NAME" --notes-file docs/release-notes.md

@@ -107,10 +107,10 @@ def login(*, reuse: bool = False, allow_browser: bool = True):
             tokens = None
     if tokens is None:
         if not allow_browser:
-            raise AuthError("请先登录算法实验室账号。")
+            raise AuthError("请先登录算法与科研实验室账号。")
         tokens = browser_login()
     identity = authorize_tokens(tokens)
-    print("算法实验室账号验证成功。", flush=True)
+    print("账号验证成功。", flush=True)
     return identity
 
 
@@ -221,7 +221,7 @@ def install(*, gui_path: str | None = None):
 
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ICTHubPrinter") as key:
         for name, value in {
-            "DisplayName": PRINTER_NAME, "DisplayVersion": __version__, "Publisher": "算法实验室",
+            "DisplayName": PRINTER_NAME, "DisplayVersion": __version__, "Publisher": "算法与科研实验室",
             "UninstallString": f'"{interface}" uninstall', "InstallLocation": str(directory),
             "DisplayIcon": str(interface),
         }.items():

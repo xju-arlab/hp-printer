@@ -47,7 +47,7 @@ class TokenVerifier:
         if not isinstance(claims.get("sub"), str) or not claims["sub"]:
             raise AuthError("Missing subject")
         if claims.get("email_verified") is not True or not claims.get("email"):
-            raise AuthError("请先在算法实验室账号中心完成邮箱验证。")
+            raise AuthError("请先在算法与科研实验室账号中心完成邮箱验证。")
         groups = claims.get("groups")
         if not isinstance(groups, list) or self.required_group not in groups:
             raise AuthError("账号暂时无法使用打印服务，请确认邮箱已验证且账号处于启用状态。")

@@ -42,7 +42,7 @@ class Credentials:
                     save_tokens(tokens)
                 return tokens["access_token"]
             except (OSError, KeyError, ValueError, jwt.PyJWTError, AuthError, httpx.HTTPError) as exc:
-                raise AuthError("请重新运行安装包登录算法实验室账号。") from exc
+                raise AuthError("请重新运行安装包登录算法与科研实验室账号。") from exc
 
 
 class Routing:

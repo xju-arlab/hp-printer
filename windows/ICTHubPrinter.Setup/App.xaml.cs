@@ -12,15 +12,17 @@ public partial class App : Application
         instance = new Mutex(true, "Local\\AlgorithmLabPrinterSetup", out var first);
         if (!first)
         {
-            MessageBox.Show("打印机安装器已打开，请先关闭其他安装窗口。", "算法实验室");
+            MessageBox.Show("安装器已打开。", "算法与科研实验室");
             Shutdown();
             return;
         }
+        Theme.Start();
         base.OnStartup(e);
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        Theme.Stop();
         instance?.Dispose();
         base.OnExit(e);
     }
