@@ -4,7 +4,7 @@
 
 ## 当前目标与范围
 
-用户将以下内容提前：Windows EXE 安装器、Authentik 登录与邮箱/打印组准入、校外 Word Ctrl+P、GitHub/GitCode 公开仓库与 Release、本地和 Pi 版本同步。用户已明确改为公开下载，打印准入由 ICTHub 账号执行；实验室内网保持直接打印。纯 Python + uv，无前端工程，无 HP 专有驱动安装。网页上传、DOCX 转换/字体和完整 CLI 队列管理仍为后续阶段。
+用户将以下内容提前：Windows EXE 安装器、Authentik 登录与邮箱验证、校外 Word Ctrl+P、GitHub/GitCode 公开仓库与 Release、本地和 Pi 版本同步。用户已明确改为公开下载，打印准入由 ICTHub 账号执行；实验室内网保持直接打印。纯 Python + uv，无前端工程，无 HP 专有驱动安装。网页上传、DOCX 转换/字体和完整 CLI 队列管理仍为后续阶段。
 
 ## 已落地
 
@@ -12,7 +12,7 @@
 - Pi `winbeau@192.168.5.87`，主机 fourb，Ubuntu 24.04.4 arm64。原 `HP_DeskJet_4900 → ipp://localhost:60000/ipp/print → USB` 保留。P1 备份 `/home/winbeau/hp-printer-backups/p1-20260929/`。
 - CUPS 只在 loopback 和 WLAN 192.168.5.87:631 服务；192.168.5.0/24 直接打印，管理页面限 loopback，ipp-usb 外部端口有 nftables 保护。WLAN DHCP 保留仍未确认。
 - Python 网关由 systemd `hp-printer.service` 运行，监听 127.0.0.1:8765。现有 Cloudflare Tunnel 将 hp.icthub.top 转发至此。`/health` 已公网返回 200，匿名 IPP 返回 401。
-- Authentik 位于 huawei2 的 Docker 部署。本仓库 `deploy/authentik-hp-printer.yaml` 已应用并作为数据库 BlueprintInstance 持久化。用户指定 `winbeau` 为首个打印授权成员，已加入 hp-printer-users。相邻 auth-login 工作区已有未提交变更，不修改它。
+- Authentik 位于 huawei2 的 Docker 部署。本仓库 `deploy/authentik-hp-printer.yaml` 已应用并作为数据库 BlueprintInstance 持久化。用户随后明确开放打印准入：所有已激活且邮箱已验证的 ICTHub 账号自动获得该应用的打印权限。专属 groups scope 保留 RC2 兼容的 hp-printer-users claim，不要求逐个加入真实组。相邻 auth-login 工作区已有未提交变更，不修改它。
 - Windows 安装器使用 public OIDC client + PKCE，回调 127.0.0.1:18766；当前用户 DPAPI 保存令牌。后台桥 127.0.0.1:18765，优先探测 LAN CUPS UUID，其他情况通过 HTTPS 公网网关；无需客户端 cloudflared。
 - Windows 已安装“算法实验室·惠普打印机”，内置 Microsoft IPP Class Driver。真实登录、授权刷新、Startup 快捷方式恢复已验证，默认仍为原 USB 打印机。端口 WSD-d4e26a22-14b1-4ca0-8bad-cb9428791b98。
 - 已完成一页公网 Windows 系统打印：Windows job 5 → remote → CUPS job 4，Get-Job-Attributes 返回 completed，用户确认测试页很快出纸。测试后已恢复内网优先。RC2（0.1.0rc2）修复并替代 RC1；旧标签和资产保留。
@@ -22,7 +22,7 @@
 
 详细证据以 [RC2 实测](verification/windows-rc2-20260930.md) 为准。登录、安装、公网系统打印、自启和刷新已验证。Word 自动化保存失败/未完成，未执行到 Word PrintOut；需用户手动 Ctrl+P 验收。用户已确认新测试页很快出纸，字体细节未单独确认；实际校外网络另测。不要把 GDI 系统打印成功写成 Word 已打印成功。
 
-公网限制每次 IPP 请求 80 MiB；账号须有已验证邮箱与打印组。服务端检查 JWT 和作业所有权，不信任客户端自报用户名。已提交请求失败后不自动换路重发。CUPS 是唯一调度者。
+公网限制每次 IPP 请求 80 MiB；账号须已激活且邮箱已验证；打印权限由本应用的 OIDC mapping 自动授予，无需管理员逐个审批。服务端检查 JWT 和作业所有权，不信任客户端自报用户名。已提交请求失败后不自动换路重发。CUPS 是唯一调度者。
 
 CUPS 生产响应重复 media-default/sides-default 尚未根治，Windows 桥过滤相同重复默认值。CUPS 曾报告 media-empty-report，原 USB 接口却 idle/none；仍需观察。protected print、实际校外网络和更多 Windows 客户端未验证。EXE 当前无代码签名证书。
 

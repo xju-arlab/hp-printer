@@ -4,7 +4,7 @@
 
 > 已完成真实 Authentik 登录、Windows 系统打印机安装和公网 Windows 系统打印：测试作业被 CUPS 报告 completed，用户已确认很快出纸。Word 实际文档打印和真正校外网络仍待验收。
 
-**下载公开候选版 v0.1.0-rc.2：[GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2) · [GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2)**。两端提供同一份 EXE 与 SHA256，下载无需仓库授权。安装登录与公网打印由 ICTHub 账号、已验证邮箱和打印授权组控制。请使用 RC2，修复了 RC1 的登录验证和 Windows 接入问题。
+**下载公开候选版 v0.1.0-rc.2：[GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2) · [GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.2)**。两端提供同一份 EXE 与 SHA256，下载无需仓库授权。注册 ICTHub 账号并验证邮箱即可安装和公网打印，无需管理员单独授权。请使用 RC2，修复了 RC1 的登录验证和 Windows 接入问题。
 
 ```text
 Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────────┐
@@ -28,6 +28,6 @@ Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────�
 
 **P1 主链路已验证**：Windows 11 新队列使用系统自带 Microsoft IPP Class Driver（无需 HP 厂商驱动），测试作业由 Pi CUPS 报告完成，用户确认测试页出纸；原有 WSD/USB 队列和默认值保留。严格 IPP 响应中的重复属性尚未修复，稳定地址、Word/PDF 和其他 Windows 兼容仍是收尾项。默认自动排队打印，管理员可暂停、取消和恢复。进展见[实测记录](docs/verification/p1-20260929.md)。
 
-Windows 安装包目标设备名为 **算法实验室·惠普打印机**。安装时通过浏览器登录 ICTHub，需已验证邮箱及打印授权组；凭据使用当前用户 DPAPI 加密。内网优先直连指定 Pi，公网通过现有 `hp.icthub.top` HTTP Tunnel，无需客户端 cloudflared。DOCX 上传转换留到后续。
+Windows 安装包目标设备名为 **算法实验室·惠普打印机**。安装时通过浏览器登录 ICTHub，需账号已激活且邮箱已验证；凭据使用当前用户 DPAPI 加密。内网优先直连指定 Pi，公网通过现有 `hp.icthub.top` HTTP Tunnel，无需客户端 cloudflared。DOCX 上传转换留到后续。
 
 公开仓库：[GitHub](https://github.com/xju-arlab/hp-printer) · [GitCode](https://gitcode.com/xju-arlab/hp-printer)。版本以 GitHub 为准，GitCode 同步 main、标签和候选版发布文件：本地提交推送两端，再用 `bash scripts/sync-pi.sh` 拉取到 Pi；代码部署按版本另行执行。详见 [运维说明](docs/09-windows-release.md)。
