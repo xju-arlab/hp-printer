@@ -2,7 +2,7 @@
 
 [项目首页](../README.md) · [新对话入口](HANDOFF.md) · [进度记录](progress.md)
 
-> 2026-09-30：最新客户端 RC5 采用 Notion 风格、系统深浅色和左栏设备状态，见 [界面记录](verification/windows-rc4-20260930.md)。Pi 保持 Python + uv，公开状态 API 由 RC3 服务提供；已有出纸证据属于 RC2。
+> 2026-09-30：最新客户端 RC6 修复重复安装的同名冲突，见 [重装记录](verification/windows-rc6-20260930.md)；延续 Notion 风格、系统深浅色和左栏状态。Pi 保持 Python + uv，公开状态 API 由 RC3 服务提供；已有出纸证据属于 RC2。
 
 ## 1. 已确认目标
 
