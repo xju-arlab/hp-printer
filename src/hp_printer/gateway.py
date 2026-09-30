@@ -24,6 +24,7 @@ from .ipp import (
 from .ipp import (
     request as ipp_request,
 )
+from .status import PrinterStatus
 
 log = logging.getLogger("hp_printer.gateway")
 
@@ -53,6 +54,7 @@ def create_app(config: GatewayConfig | None = None, *, verifier=None, transport=
     owners = JobOwners(state_dir / "jobs.db")
     verifier = verifier or TokenVerifier(config.issuer, config.client_id, config.required_group)
     concurrency = asyncio.Semaphore(4)
+    printer_status = PrinterStatus(config.cups_url)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -80,7 +82,13 @@ def create_app(config: GatewayConfig | None = None, *, verifier=None, transport=
 
     @app.get("/")
     def index():
-        return Response("ICTHub 打印服务已启动。请运行 Windows 安装包登录并添加打印机。", media_type="text/plain")
+        return Response("算法实验室打印服务。设备状态 API：/v1/status", media_type="text/plain")
+
+    @app.get("/v1/status")
+    async def status(req: Request, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        return await printer_status.get(req.app.state.http)
 
     @app.get("/v1/me")
     def me(req: Request):

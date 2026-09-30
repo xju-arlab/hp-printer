@@ -1,11 +1,11 @@
 # Windows 安装包与公网 IPP
 
-本轮交付范围：Authentik 邮箱验证与开放注册准入、Windows 系统打印机、校外 HTTPS 打印、GitHub/GitCode 公开仓库与 Release 和 Pi 同版本部署。DOCX 网页转换与上传页留在后续阶段。
+本轮交付范围：C# WPF 图形安装器、Authentik 窗口内登录、Windows 系统打印机、HTTPS 公网打印、GitHub/GitCode 公开 Release 和 Pi 同版本部署。新增公开只读 [状态 API](10-status-api.md)，不做状态网页。DOCX 网页转换与上传页留在后续阶段。
 
 ## 数据路径
 
 - 现有 CUPS/ipp-usb/USB 队列保持为唯一实际调度者。
-- 安装器通过 Authentik Authorization Code + PKCE 在系统浏览器登录。固定 public client 不包含 client secret。邮件验证和 `hp-printer-users` 授权组两者都必须满足。
+- RC3 图形安装器通过 Authentik Flow Executor 在窗口内执行账号密码、动态验证码/恢复码和授权，继续使用 Authorization Code + PKCE、state、nonce。固定 public client 不包含 client secret。已激活、已验证邮箱的账号自动获得打印 claim。CLI 旧浏览器登录入口保留兼容。
 - Windows 使用内置 Microsoft IPP Class Driver，系统打印机命名为 `算法实验室·惠普打印机`。
 - 当前 Windows 用户登录时启动 Python 后台 IPP 桥，监听 `127.0.0.1:18765`。登录令牌使用 Windows 当前用户 DPAPI 加密。
 - 桥在能访问指定实验室 Pi 时优先直连 CUPS；校外通过 `https://hp.icthub.top/ipp/print`，Cloudflare Tunnel 转发到 Pi `127.0.0.1:8765`。IPP 基于 HTTP，因此本方案不再需要客户端 cloudflared 或新增 TCP Tunnel/Cloudflare Access 应用。
@@ -33,9 +33,9 @@ bash scripts/sync-pi.sh
 
 Authentik 使用本仓库的 `deploy/authentik-hp-printer.yaml`。应用/组/Provider 已独立于 auth-login 的静态前端代码；配置作为 database-backed BlueprintInstance 持久化，容器重建不依赖临时文件。注册入口保持开放；用户完成邮箱验证并激活后即满足 `studio-users` 基线。打印专属 groups scope 自动为此类账号签发 `hp-printer-users` claim，以兼容现有 RC2；不修改账号的全局组、不授予其他产品或管理员权限。管理员可停用或删除账号。访问令牌 5 分钟、刷新授权 30 天；停用或删除账号后，已签发的短期访问令牌可能继续有效至到期（网关另有 20 秒时钟容差）。
 
-Windows 后台属于安装用户，使用开始菜单登录入口恢复过期授权。IPv4 loopback 18765 为打印桥，18766 仅在交互登录时监听。后台不接收浏览器跨域请求。公网不开放 CUPS `/admin`；CUPS 本身的原始 P1 IPP 重复属性仍待修复，桥只对输出给 Windows 的重复默认值做兼容处理。
+Windows 后台属于安装用户，使用开始菜单图形登录入口恢复过期授权。IPv4 loopback 18765 为打印桥；GUI 原生登录直接处理严格匹配的回调 URL，不监听 18766，旧 CLI 浏览器登录仍会监听它。后台不接收浏览器跨域请求。公网不开放 CUPS `/admin`；CUPS 本身的原始 P1 IPP 重复属性仍待修复，桥只对输出给 Windows 的重复默认值做兼容处理。
 
-Windows EXE 由版本化构建脚本生成；GitHub 和 GitCode Release 附同一份 EXE、SHA256 和版本说明。账号准入由 Authentik 和公网网关执行，不依赖下载链接保密。当前两端版本为 `v0.1.0-rc.2`，继续标记为候选版。
+Windows EXE 由版本化构建脚本生成：先 PyInstaller 打包 Python 后台，再使用 .NET 9 SDK 将后台嵌入 WPF 自包含单文件。用户无需另装运行时。GitHub 和 GitCode Release 附同一份 EXE、SHA256 和简短说明。RC3 继续标记为候选版，验收边界见 [RC3 记录](verification/windows-rc3-20260930.md)。
 
 ### 同步 Release
 

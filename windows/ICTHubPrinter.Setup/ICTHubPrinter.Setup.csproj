@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ICTHubPrinterSetup</AssemblyName>
+    <Version>0.1.0-rc.3</Version>
+    <AssemblyVersion>0.1.0.3</AssemblyVersion>
+    <FileVersion>0.1.0.3</FileVersion>
+    <Product>算法实验室打印机</Product>
+    <Company>算法实验室</Company>
+    <Description>算法实验室·惠普打印机安装与管理</Description>
+    <ApplicationIcon>Assets/lab-logo.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets/lab-logo.png" />
+    <EmbeddedResource Include="$(BackendPath)" LogicalName="PrinterBackend.exe" />
+  </ItemGroup>
+  <Target Name="RequireBackend" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(BackendPath)')" Text="Build using scripts/build-windows.ps1 to embed the Python backend." />
+  </Target>
+</Project>

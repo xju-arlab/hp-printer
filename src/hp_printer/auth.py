@@ -43,14 +43,14 @@ class TokenVerifier:
         except jwt.PyJWKClientConnectionError as exc:
             raise AuthError("暂时无法获取 ICTHub 登录验证信息，请检查网络后重试。") from exc
         except (jwt.PyJWTError, ValueError, OSError) as exc:
-            raise AuthError("Login expired or invalid; sign in again") from exc
+            raise AuthError("登录已过期或无效，请重新登录。") from exc
         if not isinstance(claims.get("sub"), str) or not claims["sub"]:
             raise AuthError("Missing subject")
         if claims.get("email_verified") is not True or not claims.get("email"):
-            raise AuthError("Verify your Authentik email before installing")
+            raise AuthError("请先在算法实验室账号中心完成邮箱验证。")
         groups = claims.get("groups")
         if not isinstance(groups, list) or self.required_group not in groups:
-            raise AuthError("This account has not been granted printer access")
+            raise AuthError("账号暂时无法使用打印服务，请确认邮箱已验证且账号处于启用状态。")
         if nonce is not None and not hmac.compare_digest(str(claims.get("nonce", "")), nonce):
             raise AuthError("OIDC nonce mismatch")
         return claims

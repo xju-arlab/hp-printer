@@ -4,6 +4,8 @@
 
 > 本文主要是后续 CLI 契约。当前已有 pyproject.toml、uv.lock、Python 3.12 包、help/version、doctor 和 serve；文件打印、队列管理及下述统一 JSON/退出码契约尚未实现。Windows 与公网优先范围见 [09](09-windows-release.md)。
 
+2026-09-30 用户追加 Windows C# WPF 图形安装器，位于 `windows/ICTHubPrinter.Setup`。这不改变本章 Python + uv 后端与 CLI 布局。另有公开只读 [状态 API](10-status-api.md)。
+
 ## 当前可执行入口
 
 ```bash

@@ -17,3 +17,5 @@ config.local.toml
 *.key
 *.pfx
 .runtime/
+**/bin/
+**/obj/

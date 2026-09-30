@@ -84,7 +84,16 @@ def write_settings(settings: dict):
     os.replace(temporary, path)
 
 
-def login(*, reuse: bool = False):
+def authorize_tokens(tokens: dict):
+    with httpx.Client(timeout=30, trust_env=False) as client:
+        result = client.get(PUBLIC_URL + "/v1/me", headers={"Authorization": "Bearer " + tokens["access_token"]})
+    if result.status_code != 200 or result.json().get("authorized") is not True:
+        raise AuthError("账号暂时无法使用打印服务，请确认邮箱已验证且账号处于启用状态。")
+    save_tokens(tokens)
+    return result.json()
+
+
+def login(*, reuse: bool = False, allow_browser: bool = True):
     tokens = None
     if reuse:
         try:
@@ -97,13 +106,12 @@ def login(*, reuse: bool = False):
         except (OSError, ValueError, httpx.HTTPError):
             tokens = None
     if tokens is None:
+        if not allow_browser:
+            raise AuthError("请先登录算法实验室账号。")
         tokens = browser_login()
-    with httpx.Client(timeout=30, trust_env=False) as client:
-        result = client.get(PUBLIC_URL + "/v1/me", headers={"Authorization": "Bearer " + tokens["access_token"]})
-    if result.status_code != 200 or result.json().get("authorized") is not True:
-        raise AuthError("打印服务尚未授权这个账号，请联系管理员。")
-    save_tokens(tokens)
-    print("ICTHub 登录和打印权限验证成功。", flush=True)
+    identity = authorize_tokens(tokens)
+    print("算法实验室账号验证成功。", flush=True)
+    return identity
 
 
 def stop_agent():
@@ -137,11 +145,21 @@ def shortcut(path: Path, executable: str, arguments: str = ""):
     )
 
 
-def install():
+def install(*, gui_path: str | None = None):
     if not getattr(sys, "frozen", False):
         raise RuntimeError("请使用 GitHub Release 中的 EXE 安装程序。")
-    login(reuse=True)  # Validate current server permission even when reusing saved credentials.
+    login(reuse=True, allow_browser=gui_path is None)
     directory = app_dir()
+    gui_destination = directory / "ICTHubPrinterSetup.exe"
+    if gui_path:
+        gui_source = Path(gui_path).resolve(strict=True)
+        if gui_source.suffix.lower() != ".exe" or not gui_source.is_file():
+            raise RuntimeError("安装程序路径无效，请重新下载安装包。")
+        if gui_source != gui_destination.resolve():
+            temporary_gui = directory / "ICTHubPrinterSetup.new.exe"
+            shutil.copy2(gui_source, temporary_gui)
+            os.replace(temporary_gui, gui_destination)
+    print("正在安装打印后台…", flush=True)
     destination = directory / "ICTHubPrinter.exe"
     source = Path(sys.executable)
     if source.resolve() != destination.resolve():
@@ -168,6 +186,7 @@ def install():
             raise RuntimeError("打印后台未能启动，请查看安装目录内 agent.log。")
         time.sleep(0.5)
     settings = read_settings()
+    print("正在添加 Windows 打印机…", flush=True)
     owned_port = settings.get("port_name", "")
     configuration = (
         "[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); "
@@ -194,15 +213,17 @@ def install():
     args = "-NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand " + base64.b64encode(start_script.encode("utf-16le")).decode()
     shortcut(startup, str(Path(os.environ["WINDIR"]) / "System32/WindowsPowerShell/v1.0/powershell.exe"), args)
     menu = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs/ICTHub Printer"
-    shortcut(menu / "登录打印机.lnk", str(destination), "login")
-    shortcut(menu / "打印机状态.lnk", str(destination), "status")
-    shortcut(menu / "卸载打印机.lnk", str(destination), "uninstall")
+    interface = gui_destination if gui_path else destination
+    shortcut(menu / "登录打印机.lnk", str(interface), "login")
+    shortcut(menu / "打印机状态.lnk", str(interface), "status")
+    shortcut(menu / "卸载打印机.lnk", str(interface), "uninstall")
     import winreg
 
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ICTHubPrinter") as key:
         for name, value in {
-            "DisplayName": PRINTER_NAME, "DisplayVersion": __version__, "Publisher": "XJU ICTHub",
-            "UninstallString": f'"{destination}" uninstall', "InstallLocation": str(directory),
+            "DisplayName": PRINTER_NAME, "DisplayVersion": __version__, "Publisher": "算法实验室",
+            "UninstallString": f'"{interface}" uninstall', "InstallLocation": str(directory),
+            "DisplayIcon": str(interface),
         }.items():
             winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
     print(f"已安装：{PRINTER_NAME}\n现在可在 Word 中按 Ctrl+P 选择这台打印机。\nWindows 当前用户登录后会自动启动打印后台。", flush=True)
@@ -211,10 +232,16 @@ def install():
 def uninstall():
     settings = read_settings()
     if settings.get("port_name"):
-        powershell(
+        configuration = (
             f"$p=Get-Printer -Name {psquote(PRINTER_NAME)} -ErrorAction SilentlyContinue; "
             f"if($p -and $p.PortName -eq {psquote(settings['port_name'])}){{$p | Remove-Printer}}"
         )
+        try:
+            powershell(configuration)
+        except RuntimeError as exc:
+            if "0x80070005" not in str(exc):
+                raise
+            elevated_powershell(configuration)
     stop_agent()
     startup = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs/Startup/ICTHub Printer.lnk"
     startup.unlink(missing_ok=True)
@@ -235,7 +262,14 @@ def uninstall():
     executable = (directory / "ICTHubPrinter.exe").resolve()
     if executable.parent != directory:
         raise RuntimeError("Invalid uninstall path")
-    script = f"Start-Sleep -Seconds 4; Remove-Item -LiteralPath {psquote(str(executable))} -Force -ErrorAction SilentlyContinue"
+    gui_executable = directory / "ICTHubPrinterSetup.exe"
+    # A running installed UI cannot be removed until the user closes it.
+    script = (
+        f"$paths=@({psquote(str(executable))},{psquote(str(gui_executable))}); "
+        "for($i=0;$i -lt 120;$i++){Start-Sleep -Seconds 2; "
+        "foreach($p in $paths){Remove-Item -LiteralPath $p -Force -ErrorAction SilentlyContinue}; "
+        "if(-not ($paths | Where-Object {Test-Path -LiteralPath $_})){break}}"
+    )
     encoded = base64.b64encode(script.encode("utf-16le")).decode()
     subprocess.Popen(["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-EncodedCommand", encoded],
                      creationflags=subprocess.CREATE_NO_WINDOW)
@@ -274,7 +308,7 @@ def main():
         if stream and hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="算法实验室·惠普打印机安装与登录")
-    parser.add_argument("command", nargs="?", choices=["install", "login", "agent", "status", "uninstall", "remote-only", "auto-route"], default="install")
+    parser.add_argument("command", nargs="?", choices=["install", "login", "agent", "status", "uninstall", "remote-only", "auto-route", "gui-backend"], default="install")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--no-pause", action="store_true", help="Do not wait for Enter when launched from a terminal")
     args = parser.parse_args()
@@ -282,7 +316,10 @@ def main():
         parser.error("This application requires Windows 10/11")
     code = 0
     try:
-        if args.command == "install":
+        if args.command == "gui-backend":
+            from .gui_backend import run
+            run()
+        elif args.command == "install":
             install()
         elif args.command == "login":
             login()
@@ -302,7 +339,7 @@ def main():
         print(str(exc), file=sys.stderr, flush=True)
         code = 1
     finally:
-        if args.command != "agent" and not args.no_pause and sys.stdin and sys.stdin.isatty():
+        if args.command not in ("agent", "gui-backend") and not args.no_pause and sys.stdin and sys.stdin.isatty():
             input("按 Enter 关闭窗口……")
     raise SystemExit(code)
 
