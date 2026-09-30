@@ -2,7 +2,7 @@
 
 [项目首页](../README.md) · [新对话入口](HANDOFF.md) · [进度记录](progress.md)
 
-> 设计 v0.4 · 2026-09-29 · RC2 已通过真实登录、Windows 安装和公网系统打印；Word 实际文档、新测试纸和校外网络仍待验收。详见 [RC2 实测](verification/windows-rc2-20260930.md)。
+> 设计 v0.4 · 2026-09-29 · RC2 已通过真实登录、Windows 安装和公网系统打印，用户已确认测试页很快出纸；Word 实际文档和校外网络仍待验收。详见 [RC2 实测](verification/windows-rc2-20260930.md)。
 
 ## 1. 已确认目标
 

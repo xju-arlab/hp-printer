@@ -6,7 +6,7 @@ Windows 打印机名称：**算法实验室·惠普打印机**。请使用 RC2�
 
 - winbeau 通过真实浏览器 PKCE 登录，邮箱和打印组准入通过；凭据由当前用户 DPAPI 加密保存。
 - Windows EXE 安装成功，使用系统 Microsoft IPP Class Driver；配置当前用户启动项、开始菜单和卸载入口。
-- Windows 系统打印接口经公网 HTTPS 成功提交一页合成文档：Windows job 5 → CUPS job 4，CUPS 状态 completed。
+- Windows 系统打印接口经公网 HTTPS 成功提交一页合成文档：Windows job 5 → CUPS job 4，CUPS 状态 completed；用户已确认测试页很快出纸。
 - 实验室网络强制公网路径已验证；测试后恢复内网优先。真实授权刷新、后台从启动项恢复和 LAN 查询均通过。
 - 修复 Cloudflare JWKS 403、队列配置所需 UAC、Windows IPP URI 小写，以及中文设置文件编码问题。
 - 40 项自动检查通过。原 CUPS/USB 配置、旧 Windows 队列和 USB 默认打印机保留。
@@ -17,7 +17,7 @@ Windows 打印机名称：**算法实验室·惠普打印机**。请使用 RC2�
 
 ## 尚待验收
 
-**本轮 Word 自动化未完成，因此 Word 实际文档打印仍需人工验收。** 系统打印 completed 不等于目视确认：新测试纸是否完整出纸、中文是否正常仍待用户确认。强制公网测试不等于实际校外网络测试。
+**本轮 Word 自动化未完成，因此 Word 实际文档打印仍需人工验收。** 用户已确认公网测试页很快出纸，中文与字体细节未单独确认。实际校外网络仍待测试。
 
 安装包未签名，Windows 可能提示未知发布者。后台随安装用户登录运行，单次 IPP 请求最多 80 MiB；请求结果不明时不会自动换通道重发。
 
