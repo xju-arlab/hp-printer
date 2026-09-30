@@ -44,3 +44,19 @@ def test_invalid_signature_and_nonce(signed):
         verifier.verify(jwt.encode(claims, forged, algorithm="RS256"))
     with pytest.raises(AuthError):
         verifier.verify(jwt.encode(claims, key, algorithm="RS256"), nonce="other")
+
+
+def test_jwks_request_identifies_application():
+    verifier = TokenVerifier()
+    assert verifier.keys.headers["User-Agent"].startswith("ICTHubPrinter/")
+    assert verifier.keys.headers["Accept"] == "application/json"
+
+
+def test_jwks_outage_is_reported_as_network_error():
+    def unavailable(_):
+        raise jwt.PyJWKClientConnectionError("HTTP 403")
+
+    verifier = TokenVerifier()
+    verifier.keys = SimpleNamespace(get_signing_key_from_jwt=unavailable)
+    with pytest.raises(AuthError, match="检查网络"):
+        verifier.verify("synthetic-token")

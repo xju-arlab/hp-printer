@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 import httpx
 import jwt
 
+from . import __version__
 from .config import CALLBACK_PORT, CLIENT_ID, ISSUER, REQUIRED_GROUP
 
 
@@ -24,7 +25,10 @@ class TokenVerifier:
         self.issuer = issuer
         self.client_id = client_id
         self.required_group = required_group
-        self.keys = jwt.PyJWKClient(issuer + "jwks/", timeout=12, lifespan=300)
+        self.keys = jwt.PyJWKClient(
+            issuer + "jwks/", timeout=12, lifespan=300,
+            headers={"User-Agent": f"ICTHubPrinter/{__version__}", "Accept": "application/json"},
+        )
 
     def verify(self, token: str, *, nonce: str | None = None) -> dict:
         if not token or len(token) > 32768:
@@ -36,6 +40,8 @@ class TokenVerifier:
                 issuer=self.issuer, leeway=20,
                 options={"require": ["iss", "sub", "aud", "exp", "iat"]},
             )
+        except jwt.PyJWKClientConnectionError as exc:
+            raise AuthError("暂时无法获取 ICTHub 登录验证信息，请检查网络后重试。") from exc
         except (jwt.PyJWTError, ValueError, OSError) as exc:
             raise AuthError("Login expired or invalid; sign in again") from exc
         if not isinstance(claims.get("sub"), str) or not claims["sub"]:
