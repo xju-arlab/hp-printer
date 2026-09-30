@@ -19,3 +19,4 @@ config.local.toml
 .runtime/
 **/bin/
 **/obj/
+*:Zone.Identifier
