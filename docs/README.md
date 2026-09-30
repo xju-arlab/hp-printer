@@ -2,7 +2,7 @@
 
 [项目首页](../README.md) · [新对话入口](HANDOFF.md) · [进度记录](progress.md)
 
-> 2026-09-30：最新客户端 RC7 默认白色 Light 主题，见 [主题记录](verification/windows-rc7-20260930.md)；延续重复安装修复、Notion 风格和左栏状态。Pi 保持 Python + uv，公开状态 API 由 RC3 服务提供；已有出纸证据属于 RC2。
+> 2026-09-30：最新客户端 RC8 使用小尺寸 Logo、紧凑输入框，登录重试保留输入，见 [表单记录](verification/windows-rc8-20260930.md)；延续默认浅色、重复安装修复和左栏状态。Pi 保持 Python + uv，公开状态 API 由 RC3 服务提供；已有出纸证据属于 RC2。
 
 ## 1. 已确认目标
 

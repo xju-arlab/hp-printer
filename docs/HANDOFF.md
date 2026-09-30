@@ -6,7 +6,9 @@
 
 最新 UI 要求：参考 xju-feiyue 的 Notion 风格，减少提示，左栏显示实时打印机状态；实验室名称为“算法与科研实验室”，设备名仍为“算法实验室·惠普打印机”。RC4 / RC5 说明见 [记录](verification/windows-rc4-20260930.md)。这是对 RC3 品牌文案的后续修正。
 
-最新客户端为 RC7，提交 `e477318e0b78bcc9dbbe896fff27352be7087896`，按用户要求默认白色 Light 主题，不再跟随系统应用深浅色，继续支持系统高对比度。见 [RC7 记录](verification/windows-rc7-20260930.md)。
+最新客户端为 RC8，提交 `58fa817454ce02b4ad549cc74cd6ddaf009771cb`。Logo 预导出八档小图并按 DPI 选用，修复输入框重复 Padding 和空消息占位；密码/验证码在提交与错误重试时保留，验证码标题为“动态验证码(Authenticator)”。见 [RC8 记录](verification/windows-rc8-20260930.md)。新交互与跨屏 DPI 待实机验收。
+
+RC7 已按用户要求默认白色 Light 主题，不再跟随系统应用深浅色，继续支持系统高对比度。见 [RC7 记录](verification/windows-rc7-20260930.md)。
 
 RC6 修复用户反馈的同名打印机冲突，按 Windows 设备 UUID/地址恢复已有队列，支持覆盖与重复安装，保留队列和打印偏好；相同 EXE 不替换、不重启后台。见 [RC6 记录](verification/windows-rc6-20260930.md)。重装、升级及 GUI 交互未实机验收。
 
