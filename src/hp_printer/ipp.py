@@ -172,11 +172,14 @@ def prepare_request(message: Message, authority: str, *, owner: str | None = Non
             except (UnicodeError, ValueError) as exc:
                 raise IPPError("Invalid URI") from exc
             path = target.path
-            valid = path == PRINTER_PATH if name == b"printer-uri" else (
+            valid = path.casefold() == PRINTER_PATH.casefold() if name == b"printer-uri" else (
                 path.startswith("/jobs/") and path[6:].isdigit()
             )
             if not valid or target.query or target.fragment or target.username:
                 raise IPPError("Only the configured printer is available")
+            if name == b"printer-uri":
+                # The Windows inbox IPP driver lowercases this URI attribute.
+                path = PRINTER_PATH
             message.replace(name, 0x45, ("ipp://" + authority + path).encode())
     if message.code in JOB_OPERATIONS and not message.job_id():
         raise IPPError("A job ID is required")

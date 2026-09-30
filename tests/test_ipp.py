@@ -20,6 +20,14 @@ def test_binary_document_roundtrip():
     assert parse(message.encode()).encode() == message.encode()
 
 
+def test_windows_lowercase_uri_is_canonicalized():
+    message = request(uri="ipp://127.0.0.1:18765" + PRINTER_PATH.lower())
+    prepare_request(message, "localhost:631")
+    assert message.values(b"printer-uri") == [("ipp://localhost:631" + PRINTER_PATH).encode()]
+    with pytest.raises(IPPError):
+        prepare_request(request(uri="ipp://localhost/printers/another_queue"), "localhost:631")
+
+
 @pytest.mark.parametrize("operation", [3, 7, 0x4001, 0x0010])
 def test_uri_fetch_and_cups_admin_rejected(operation):
     with pytest.raises(IPPError):

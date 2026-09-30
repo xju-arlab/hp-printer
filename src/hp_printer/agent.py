@@ -119,10 +119,12 @@ def create_agent(directory: Path | None = None):
         return {"service": "icthub-printer-agent", "version": __version__, **status}
 
     @app.get(PRINTER_PATH)
+    @app.get(PRINTER_PATH.lower())
     def info():
         return Response("ICTHub Windows IPP bridge", media_type="text/plain")
 
     @app.post(PRINTER_PATH)
+    @app.post(PRINTER_PATH.lower())
     async def forward(req: Request):
         if req.headers.get("content-type", "").split(";")[0].strip().lower() != "application/ipp":
             raise HTTPException(415, "IPP request required")

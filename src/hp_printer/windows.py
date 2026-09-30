@@ -9,15 +9,16 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
 import httpx
 
 from . import __version__
-from .auth import AuthError, browser_login
+from .auth import AuthError, TokenVerifier, browser_login, refresh_tokens
 from .config import LOCAL_PORT, LOCAL_URL, PRINTER_NAME, PUBLIC_URL
-from .credentials import app_dir, save_tokens
+from .credentials import app_dir, load_tokens, save_tokens
 
 
 def psquote(value: str) -> str:
@@ -25,7 +26,12 @@ def psquote(value: str) -> str:
 
 
 def powershell(script: str, *, timeout=180) -> str:
-    encoded = base64.b64encode(("$ErrorActionPreference='Stop'; " + script).encode("utf-16le")).decode()
+    wrapped = (
+        "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; "
+        "[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); try { " + script
+        + " } catch { [Console]::Error.WriteLine($_.FullyQualifiedErrorId + ': ' + $_.Exception.Message); exit 1 }"
+    )
+    encoded = base64.b64encode(wrapped.encode("utf-16le")).decode()
     result = subprocess.run(
         ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded],
         capture_output=True, timeout=timeout, creationflags=subprocess.CREATE_NO_WINDOW,
@@ -35,6 +41,33 @@ def powershell(script: str, *, timeout=180) -> str:
         error = result.stderr.decode("utf-8", errors="replace")[-1500:]
         raise RuntimeError("Windows 打印机配置失败：" + error)
     return result.stdout.decode("utf-8", errors="replace").strip()
+
+
+def elevated_powershell(script: str) -> str:
+    """Elevate queue configuration only; login and the agent stay with this user."""
+    handle, filename = tempfile.mkstemp(prefix="printer-setup-", suffix=".json", dir=app_dir())
+    os.close(handle)
+    result_path = Path(filename)
+    elevated = (
+        "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; "
+        "try { $result = & { " + script + " }; "
+        "$reply=@{ok=$true;output=($result -join [Environment]::NewLine)} } "
+        "catch { $reply=@{ok=$false;error=$_.Exception.Message} }; "
+        f"$reply | ConvertTo-Json -Compress | Set-Content -LiteralPath {psquote(filename)} -Encoding UTF8"
+    )
+    encoded = base64.b64encode(elevated.encode("utf-16le")).decode()
+    try:
+        powershell(
+            "$p=Start-Process -FilePath powershell.exe -Verb RunAs -WindowStyle Hidden -Wait -PassThru "
+            f"-ArgumentList '-NoProfile -NonInteractive -EncodedCommand {encoded}'; "
+            "if($p.ExitCode -ne 0){throw '管理员打印机配置进程未正常完成。'}", timeout=300,
+        )
+        result = json.loads(result_path.read_text(encoding="utf-8-sig"))
+        if not result.get("ok"):
+            raise RuntimeError("Windows 打印机配置失败：" + result.get("error", "未知错误"))
+        return result["output"]
+    finally:
+        result_path.unlink(missing_ok=True)
 
 
 def read_settings() -> dict:
@@ -51,8 +84,20 @@ def write_settings(settings: dict):
     os.replace(temporary, path)
 
 
-def login():
-    tokens = browser_login()
+def login(*, reuse: bool = False):
+    tokens = None
+    if reuse:
+        try:
+            saved = load_tokens()
+            try:
+                TokenVerifier().verify(saved.get("access_token", ""))
+                tokens = saved
+            except AuthError:
+                tokens = refresh_tokens(saved)
+        except (OSError, ValueError, httpx.HTTPError):
+            tokens = None
+    if tokens is None:
+        tokens = browser_login()
     with httpx.Client(timeout=30, trust_env=False) as client:
         result = client.get(PUBLIC_URL + "/v1/me", headers={"Authorization": "Bearer " + tokens["access_token"]})
     if result.status_code != 200 or result.json().get("authorized") is not True:
@@ -95,7 +140,7 @@ def shortcut(path: Path, executable: str, arguments: str = ""):
 def install():
     if not getattr(sys, "frozen", False):
         raise RuntimeError("请使用 GitHub Release 中的 EXE 安装程序。")
-    login()  # No system printer or autostart entry is installed before this succeeds.
+    login(reuse=True)  # Validate current server permission even when reusing saved credentials.
     directory = app_dir()
     destination = directory / "ICTHubPrinter.exe"
     source = Path(sys.executable)
@@ -124,7 +169,7 @@ def install():
         time.sleep(0.5)
     settings = read_settings()
     owned_port = settings.get("port_name", "")
-    output = powershell(
+    configuration = (
         "[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); "
         f"$name={psquote(PRINTER_NAME)}; $p=Get-Printer -Name $name -ErrorAction SilentlyContinue; "
         f"if($p -and $p.PortName -ne {psquote(owned_port)}){{throw 'A different printer already uses this name'}}; "
@@ -134,6 +179,13 @@ def install():
         "Set-PrintConfiguration -PrinterName $name -PaperSize A4 -Color $false -DuplexingMode OneSided; "
         "$p | Select-Object Name,PortName,DriverName | ConvertTo-Json -Compress"
     )
+    try:
+        output = powershell(configuration)
+    except RuntimeError as exc:
+        if "0x80070005" not in str(exc):
+            raise
+        print("Windows 需要管理员授权来添加打印机，请在权限确认窗口选择“是”。", flush=True)
+        output = elevated_powershell(configuration)
     printer = json.loads(output)
     settings.update({"port_name": printer["PortName"], "version": __version__, "printer_name": PRINTER_NAME})
     write_settings(settings)
