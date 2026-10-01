@@ -38,7 +38,7 @@ internal static class Theme
         {
             ["Canvas"] = "#FFFFFF", ["Ink"] = "#37352F", ["Muted"] = "#787774",
             ["Faint"] = "#9B9A97", ["Subtle"] = "#F7F6F3", ["Line"] = "#EDECE9",
-            ["LineStrong"] = "#DCDAD4", ["Hover"] = "#F1F1EF", ["Track"] = "#E5E3DE",
+            ["LineStrong"] = "#DCDAD4", ["Track"] = "#E5E3DE",
             ["PrimaryBg"] = "#37352F", ["PrimaryFg"] = "#FFFFFF", ["Error"] = "#B44040",
             ["Success"] = "#0F7B6C", ["Active"] = "#2383E2",
         };
@@ -48,7 +48,7 @@ internal static class Theme
             if (SystemParameters.HighContrast)
                 color = name switch
                 {
-                    "Canvas" or "Subtle" or "Hover" or "PrimaryFg" => SystemColors.WindowColor,
+                    "Canvas" or "Subtle" or "PrimaryFg" => SystemColors.WindowColor,
                     _ => SystemColors.WindowTextColor,
                 };
             var brush = new SolidColorBrush(color);

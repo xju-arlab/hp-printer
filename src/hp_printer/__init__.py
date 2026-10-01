@@ -1,3 +1,3 @@
 """ICTHub laboratory printing."""
 
-__version__ = "0.1.0rc9"
+__version__ = "0.1.0"
