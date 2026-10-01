@@ -6,7 +6,7 @@
 
 最新 UI 要求：参考 xju-feiyue 的 Notion 风格，减少提示，左栏显示实时打印机状态；实验室名称为“算法与科研实验室”，设备名仍为“算法实验室·惠普打印机”。RC4 / RC5 说明见 [记录](verification/windows-rc4-20260930.md)。这是对 RC3 品牌文案的后续修正。
 
-最新客户端为 RC9，提交 `d48766fd2650be52e424f7b0316463cb0c9aa650`。安装器首页和登录页新增“注册账号”，窗口内填写用户名、邮箱和密码，点击邮件验证链接后返回登录。公共注册 Flow 已只读确认开放；未改生产策略，新账号验证邮箱后按现有规则自动准入。见 [RC9 记录](verification/windows-rc9-20260930.md)。真实注册、邮件收取和 GUI 交互仍待实机验收。
+当前客户端为正式版 v0.1.0，提交 `ffc7348602a93ebfeb5c6c12be6b0f7194b19de1`，文字按钮悬停只加深字色并略微加粗，见 [正式版记录](verification/windows-v010-20260930.md)。注册功能始于 RC9（提交 `d48766fd2650be52e424f7b0316463cb0c9aa650`）。安装器首页和登录页新增“注册账号”，窗口内填写用户名、邮箱和密码，点击邮件验证链接后返回登录。公共注册 Flow 已只读确认开放；未改生产策略，新账号验证邮箱后按现有规则自动准入。见 [RC9 记录](verification/windows-rc9-20260930.md)。真实注册、邮件收取和 GUI 交互仍待实机验收。
 
 RC8 已导出八档小尺寸 Logo 并按 DPI 选用，输入框紧凑，登录/验证码重试保留输入；标题为“动态验证码(Authenticator)”。见 [RC8 记录](verification/windows-rc8-20260930.md)。跨屏 DPI 待实机验收。
 
@@ -14,7 +14,7 @@ RC7 已按用户要求默认白色 Light 主题，不再跟随系统应用深浅
 
 RC6 修复用户反馈的同名打印机冲突，按 Windows 设备 UUID/地址恢复已有队列，支持覆盖与重复安装，保留队列和打印偏好；相同 EXE 不替换、不重启后台。见 [RC6 记录](verification/windows-rc6-20260930.md)。重装、升级及 GUI 交互未实机验收。
 
-RC5 已完成简约打印机图标、系统深浅主题及左栏状态，实验室徽标保留。RC4 构建被图片附带元数据路径阻断，未发布；标签保留。生产 API 仍固定 RC3。
+RC5 已完成简约打印机图标、系统深浅主题及左栏状态，实验室徽标保留。RC4 构建被图片附带元数据路径阻断，未发布；旧 RC 标签按本轮用户要求清理。生产 API 仍固定 RC3 对应提交。
 
 用户将以下内容提前：Windows EXE 安装器、Authentik 登录与邮箱验证、校外 Word Ctrl+P、GitHub/GitCode 公开仓库与 Release、本地和 Pi 版本同步。用户已明确改为公开下载，打印准入由账号执行；实验室内网保持直接打印。客户端采用 C# WPF 图形安装器、窗口内登录，实验室品牌为“算法与科研实验室”，采用用户 Logo；Pi/打印桥继续 Python + uv。用户明确 `/v1/status` 是状态 API，不做状态页。网页上传、DOCX 转换/字体和完整 CLI 队列管理仍为后续阶段。
 
@@ -22,7 +22,9 @@ RC3 新代码与构建见 [记录](verification/windows-rc3-20260930.md)。登�
 
 Pi 生产已由 RC2 升级至 `6c5ac0bc296af2f16094ee10f2b42d5c5f6abba2`（0.1.0rc3），`/health` 与公开 `/v1/status` 在线。物理设备和 CUPS 返回空闲、none，彩色 20%/黑色 50%。此处是新基线，下面 RC2 的打印实测仍是历史证据。
 
-GitHub/GitCode 的 `v0.1.0-rc.3` 已公开发布同一 WPF EXE 和校验文件，文件校验见 RC3 记录。维护文档可继续在 main 更新；Pi 生产程序固定在该 tag 对应提交，不因文档提交重新部署。
+GitHub/GitCode 的 `v0.1.0-rc.3` 已公开发布同一 WPF EXE 和校验文件，文件校验见 RC3 记录。维护文档可继续在 main 更新；Pi 生产程序固定在该历史版本的提交，不因文档提交重新部署。
+
+当前 GitHub/GitCode 仅保留 `v0.1.0` 正式标签与 Release。RC1–RC9 标签及旧候选版资产已按用户要求清理，历史记录中的旧下载链接不再有效；所有提交仍在 main 历史中，生产 RC3 对应提交继续保留。
 
 ## 已落地
 
@@ -33,7 +35,7 @@ GitHub/GitCode 的 `v0.1.0-rc.3` 已公开发布同一 WPF EXE 和校验文件�
 - Authentik 位于 huawei2 的 Docker 部署。本仓库 `deploy/authentik-hp-printer.yaml` 已应用并作为数据库 BlueprintInstance 持久化。用户随后明确开放打印准入：所有已激活且邮箱已验证的 ICTHub 账号自动获得该应用的打印权限。专属 groups scope 保留 RC2 兼容的 hp-printer-users claim，不要求逐个加入真实组。相邻 auth-login 工作区已有未提交变更，不修改它。
 - Windows 安装器使用 public OIDC client + PKCE，回调 127.0.0.1:18766；当前用户 DPAPI 保存令牌。后台桥 127.0.0.1:18765，优先探测 LAN CUPS UUID，其他情况通过 HTTPS 公网网关；无需客户端 cloudflared。
 - Windows 已安装“算法实验室·惠普打印机”，内置 Microsoft IPP Class Driver。真实登录、授权刷新、Startup 快捷方式恢复已验证，默认仍为原 USB 打印机。端口 WSD-d4e26a22-14b1-4ca0-8bad-cb9428791b98。
-- 已完成一页公网 Windows 系统打印：Windows job 5 → remote → CUPS job 4，Get-Job-Attributes 返回 completed，用户确认测试页很快出纸。测试后已恢复内网优先。RC2（0.1.0rc2）修复并替代 RC1；旧标签和资产保留。
+- 已完成一页公网 Windows 系统打印：Windows job 5 → remote → CUPS job 4，Get-Job-Attributes 返回 completed，用户确认测试页很快出纸。测试后已恢复内网优先。RC2（0.1.0rc2）修复并替代 RC1；旧候选版标签与资产在 v0.1.0 正式发布时按用户要求清理，提交和实测记录保留。
 - 既有 Windows P1 队列 `HP DeskJet 4900 (Pi CUPS)` 已实际打印，用户确认出纸。这个事实不能替代新安装器和公网路径验收。原 USB 默认打印机不更改。
 
 ## 验收与已知限制
@@ -56,4 +58,4 @@ CUPS 生产响应重复 media-default/sides-default 尚未根治，Windows 桥�
 
 ## 后续继续提示
 
-> 先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md、docs/progress.md 和 RC2 实测记录。登录、Windows 安装及公网系统打印已通过，用户已确认测试页很快出纸；继续人工 Word Ctrl+P 和实际校外网络验收，再发布稳定版。保持本地、GitHub、Pi 的 main 对齐，逐阶段补齐 CLI 打印和队列管理。
+> 先读 docs/README.md、docs/HANDOFF.md、docs/08-cli-and-uv.md、docs/progress.md 和 RC2 实测记录。登录、Windows 安装及公网系统打印已通过，用户已确认测试页很快出纸；继续人工 Word Ctrl+P 和实际校外网络验收，后续继续完善正式版。保持本地、GitHub、Pi 的 main 对齐，逐阶段补齐 CLI 打印和队列管理。

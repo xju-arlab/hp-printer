@@ -4,7 +4,7 @@
 
 > 已完成真实 Authentik 登录、Windows 系统打印机安装和公网 Windows 系统打印：测试作业被 CUPS 报告 completed，用户已确认很快出纸。Word 实际文档打印和真正校外网络仍待验收。
 
-**图形候选版 v0.1.0-rc.9：[GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.9) · [GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0-rc.9)**。运行 `ICTHubPrinterSetup.exe`，新用户点击“注册账号”，完成邮件验证后登录并安装，无需管理员逐个审批。已有账号可直接登录，旧版可覆盖安装。默认白色主题，保留小尺寸 Logo、紧凑表单和重试输入。两端使用同一份 EXE 和 SHA256；完整注册与图形交互仍待实机验收，见 [RC9 记录](docs/verification/windows-rc9-20260930.md)。
+**正式版 v0.1.0：[GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.0) · [GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.0)**。运行 `ICTHubPrinterSetup.exe`，登录并安装；新用户可注册并验证邮箱。支持覆盖安装、内网优先、公网打印和设备状态，默认白色主题；文字按钮悬停时字色加深、略微加粗。两端使用同一份 EXE 和 SHA256。发布与验收边界见 [v0.1.0 记录](docs/verification/windows-v010-20260930.md)。
 
 **公开状态 API：[GET /v1/status](https://hp.icthub.top/v1/status)**，读取设备状态、缺纸和墨量，不提供状态网页。见[接口说明](docs/10-status-api.md)。
 
@@ -32,4 +32,4 @@ Windows Word / PDF → 本机 IPP 桥 → LAN CUPS ─────────�
 
 Windows 安装包目标设备名为 **算法实验室·惠普打印机**。RC3 使用 Authentik Flow Executor 在窗口内完成账号密码、动态验证码和授权；使用 PKCE，凭据由当前用户 DPAPI 加密。安全密钥等尚未实现的认证方式会明确提示。内网优先直连指定 Pi，公网通过现有 `hp.icthub.top` HTTP Tunnel，无需客户端 cloudflared。DOCX 上传转换留到后续。见 [RC3 记录](docs/verification/windows-rc3-20260930.md)。
 
-公开仓库：[GitHub](https://github.com/xju-arlab/hp-printer) · [GitCode](https://gitcode.com/xju-arlab/hp-printer)。版本以 GitHub 为准，GitCode 同步 main、标签和候选版发布文件：本地提交推送两端，再用 `bash scripts/sync-pi.sh` 拉取到 Pi；代码部署按版本另行执行。详见 [运维说明](docs/09-windows-release.md)。
+公开仓库：[GitHub](https://github.com/xju-arlab/hp-printer) · [GitCode](https://gitcode.com/xju-arlab/hp-printer)。版本以 GitHub 为准，GitCode 同步 main、标签和正式版发布文件：本地提交推送两端，再用 `bash scripts/sync-pi.sh` 拉取到 Pi；代码部署按版本另行执行。详见 [运维说明](docs/09-windows-release.md)。
