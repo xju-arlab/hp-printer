@@ -30,4 +30,13 @@
 4. 公网匿名访问登录与注册入口均返回正确表单；确认此时服务器仅下发匿名 session，尚未下发 CSRF Cookie，增加对应的无 Cookie 提交用例。首轮尚未发布的构建因此取消，完成修正后重新构建。
 5. 真实 Windows 安装器登录、点击“允许”及后续打印仍待用户重试；不能将隔离检查写成真实账号验收。
 
-构建和发布信息将记录在下方。诊断脚本保存在忽略目录 `.runtime/`，公开仓库不收录用户账号、邮箱、Cookie、OAuth code 或令牌。
+诊断脚本保存在忽略目录 `.runtime/`，公开仓库不收录用户账号、邮箱、Cookie、OAuth code 或令牌。
+
+## 构建与发布
+
+- 正式标签 `v0.1.1`，提交 `359b60169806f464c9fe7c8d2df6052dfe7eae8b`；Python 版本 0.1.1，Windows 文件版本 0.1.1.0。
+- Windows Release `36818712052` 构建成功；Checks `36818712055` 通过 Ruff、55 项测试和 Python 包构建。
+- EXE 大小 86,431,500 字节，SHA256 `7c36e0779fe5b37004054797843f93af1467ac1a6ed0b196e318ac5aa744ce0d`。下载后的文件、校验文件和 GitHub 资产摘要一致。
+- [GitHub](https://github.com/xju-arlab/hp-printer/releases/tag/v0.1.1) 已设为正式 latest；[GitCode](https://gitcode.com/xju-arlab/hp-printer/releases/tag/v0.1.1) 已发布同一安装包，公开匿名下载 EXE 与校验文件后哈希一致。
+- 本轮仅修改 Windows 登录/注册客户端，不需要更新 Pi 网关才能生效。Pi 生产仍保持 RC3 对应提交；源码同步因已有 SSH 连接问题继续待办。CUPS/USB 配置不变。
+- 需要用户关闭旧安装器，下载 0.1.1 后重新登录并确认授权；真实账号恢复情况待反馈。此次发布不新增真人打印成功证据。
