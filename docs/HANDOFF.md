@@ -28,7 +28,7 @@ GitHub/GitCode 的 `v0.1.0-rc.3` 已公开发布同一 WPF EXE 和校验文件�
 
 本轮 Pi 同步未完成：`192.168.5.87:22` 超时，当前电脑不在实验室网段，Windows/WSL Tailscale 均不可用。上次已确认 Pi main 为 `f9062d441d1832a76311632f5994becbc7ea39f5`，源码和旧 RC 标签待恢复连接后同步；本地/GitHub/GitCode 已对齐。
 
-v0.1.1 正在构建：生产日志已确认 v0.1.0 授权失败由错误的 CSRF 请求头引起；现已修正为 X-Authentik-CSRF，授权说明改为中文，服务错误不再误报为不支持验证步骤。服务器合成校验和 51 项本地检查通过，真实 Windows 授权重试待验收。见 [授权核查与修复](verification/consent-check-20261001.md)。
+v0.1.1 正在构建：生产日志已确认 v0.1.0 授权失败由错误的 CSRF 请求头引起；现已修正为 X-Authentik-CSRF，授权说明改为中文，服务错误不再误报为不支持验证步骤。服务器合成校验和 55 项本地检查通过，真实 Windows 授权重试待验收。见 [授权核查与修复](verification/consent-check-20261001.md)。
 
 ## 已落地
 

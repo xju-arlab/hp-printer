@@ -89,8 +89,8 @@ class NativeRegistration:
 
     def post(self, body):
         csrf = next((cookie.value for cookie in self.client.cookies.jar if cookie.name == "authentik_csrf"), "")
-        if not csrf:
-            raise AuthError("注册会话已过期，请返回后重新开始。")
+        # Public enrollment starts anonymously, before Authentik issues a CSRF
+        # cookie. Include the current token whenever the server has set one.
         return self.read(self.client.post(EXECUTOR_URL, json=body, headers={
             "Origin": ORIGIN, "Referer": REGISTRATION_URL, CSRF_HEADER: csrf,
         }))

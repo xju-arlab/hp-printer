@@ -78,14 +78,16 @@ def test_consent_uses_authentik_csrf_after_cookie_rotation(login, monkeypatch, r
     ({"component": "ak-stage-password"}, {"password": "synthetic-password"}, "password"),
     ({"component": "ak-stage-authenticator-validate"}, {"code": "000000"}, "code"),
 ])
-def test_login_stage_posts_authentik_csrf(login, challenge, values, field):
+@pytest.mark.parametrize("has_cookie", [False, True])
+def test_login_stage_posts_authentik_csrf(login, challenge, values, field, has_cookie):
     def handle(request):
-        assert request.headers["X-Authentik-CSRF"] == "synthetic-csrf"
+        assert request.headers["X-Authentik-CSRF"] == ("synthetic-csrf" if has_cookie else "")
         assert json.loads(request.content)[field] == values[field]
         return httpx.Response(200, json=CONSENT)
 
     login.client = httpx.Client(transport=httpx.MockTransport(handle))
-    login.client.cookies.set("authentik_csrf", "synthetic-csrf", domain="auth.icthub.top")
+    if has_cookie:
+        login.client.cookies.set("authentik_csrf", "synthetic-csrf", domain="auth.icthub.top")
     login.challenge = challenge
     assert login.respond(values)["stage"] == "consent"
 
@@ -100,18 +102,20 @@ def test_missing_cookie_does_not_submit_consent(login):
         login.respond({"accept": True})
 
 
-def test_registration_posts_same_authentik_header():
+@pytest.mark.parametrize("has_cookie", [False, True])
+def test_registration_posts_same_authentik_header(has_cookie):
     registration = NativeRegistration()
     registration.client.close()
 
     def handle(request):
         assert str(request.url) == EXECUTOR_URL
-        assert request.headers["X-Authentik-CSRF"] == "synthetic-csrf"
+        assert request.headers["X-Authentik-CSRF"] == ("synthetic-csrf" if has_cookie else "")
         assert "X-CSRFToken" not in request.headers
         return httpx.Response(200, json={"component": "ak-stage-email"})
 
     registration.client = httpx.Client(transport=httpx.MockTransport(handle))
-    registration.client.cookies.set("authentik_csrf", "synthetic-csrf", domain="auth.icthub.top")
+    if has_cookie:
+        registration.client.cookies.set("authentik_csrf", "synthetic-csrf", domain="auth.icthub.top")
     try:
         assert registration.post({"component": "ak-stage-prompt"})["stage"] == "registration-email"
     finally:

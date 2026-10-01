@@ -162,7 +162,9 @@ class NativeLogin:
         else:
             raise AuthError("登录步骤不匹配，请重新登录。")
         csrf = next((c.value for c in self.client.cookies.jar if c.name == "authentik_csrf"), "")
-        if not csrf:
+        # Anonymous flow entry may not have a CSRF cookie yet. Login rotates
+        # and sets it before the authenticated consent request.
+        if component == "ak-stage-consent" and not csrf:
             raise AuthError("登录会话已过期，请返回并重新登录。")
         response = self.client.post(self.executor, json=body, headers={
             "Origin": ORIGIN, "Referer": self.flow_page, CSRF_HEADER: csrf,

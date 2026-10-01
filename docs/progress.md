@@ -6,7 +6,7 @@
 
 ## v0.1.1 授权修复（构建中）
 
-已根据生产日志确定：客户端错误使用 X-CSRFToken，导致已登录会话点击“允许”时被 Authentik 拒绝。已改为 X-Authentik-CSRF，修复服务错误提示并将授权说明改为中文。生产容器内合成 CSRF 检查确认旧请求失败、新请求通过；全部 51 项检查及 Ruff 通过。真实账号重试待验收。见 [核查与修复记录](verification/consent-check-20261001.md)。
+已根据生产日志确定：客户端错误使用 X-CSRFToken，导致已登录会话点击“允许”时被 Authentik 拒绝。已改为 X-Authentik-CSRF，修复服务错误提示并将授权说明改为中文。生产容器内合成 CSRF 检查确认旧请求失败、新请求通过；全部 55 项检查及 Ruff 通过。真实账号重试待验收。见 [核查与修复记录](verification/consent-check-20261001.md)。
 
 ## v0.1.0 正式版
 
