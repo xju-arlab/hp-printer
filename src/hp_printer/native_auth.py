@@ -19,6 +19,14 @@ from .auth import AuthError, TokenVerifier
 from .config import CALLBACK_PORT, CLIENT_ID, ISSUER
 
 ORIGIN = "https://auth.icthub.top"
+CSRF_HEADER = "X-Authentik-CSRF"
+CONSENT_PERMISSIONS = {
+    "openid": "确认你的账号身份",
+    "profile": "读取账号名称和基本资料",
+    "email": "读取邮箱及验证状态",
+    "groups": "使用账号的打印权限",
+    "offline_access": "保持登录，供后台打印使用",
+}
 
 
 class NativeLogin:
@@ -121,9 +129,18 @@ class NativeLogin:
             return {**common, "stage": "code"}
         if component == "ak-stage-consent":
             permissions = challenge.get("permissions", []) + challenge.get("additional_permissions", [])
-            return {**common, "stage": "consent", "permissions": [
-                str(p.get("name", ""))[:200] for p in permissions
-            ][:20]}
+            descriptions = [CONSENT_PERMISSIONS.get(p.get("id"), str(p.get("name", ""))[:200])
+                            for p in permissions]
+            if errors:
+                common["message"] = "授权确认已更新，请再次点击允许。"
+            return {**common, "stage": "consent", "permissions": list(dict.fromkeys(
+                text for text in descriptions if text.strip()
+            ))[:20]}
+        if component == "ak-stage-flow-error":
+            request_id = str(challenge.get("request_id", ""))
+            # Server error text/tracebacks can contain credentials or user data.
+            suffix = f"（记录编号：{request_id}）" if re.fullmatch(r"[a-fA-F0-9-]{32,36}", request_id) else ""
+            raise AuthError("登录服务未能完成授权，请返回后重新登录。" + suffix)
         if component == "ak-stage-access-denied":
             raise AuthError("账号暂时无法使用打印服务，请确认邮箱已验证且账号处于启用状态。")
         raise AuthError("账号要求的验证步骤暂不受安装器支持，请联系管理员。")
@@ -145,8 +162,10 @@ class NativeLogin:
         else:
             raise AuthError("登录步骤不匹配，请重新登录。")
         csrf = next((c.value for c in self.client.cookies.jar if c.name == "authentik_csrf"), "")
+        if not csrf:
+            raise AuthError("登录会话已过期，请返回并重新登录。")
         response = self.client.post(self.executor, json=body, headers={
-            "Origin": ORIGIN, "Referer": self.flow_page, "X-CSRFToken": csrf,
+            "Origin": ORIGIN, "Referer": self.flow_page, CSRF_HEADER: csrf,
         })
         if response.is_redirect:
             return self.advance(urljoin(self.executor, response.headers["location"]))

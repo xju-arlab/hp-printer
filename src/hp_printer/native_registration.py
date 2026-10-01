@@ -7,7 +7,7 @@ import httpx
 
 from . import __version__
 from .auth import AuthError
-from .native_auth import ORIGIN
+from .native_auth import CSRF_HEADER, ORIGIN
 
 REGISTRATION_URL = ORIGIN + "/if/flow/icthub-public-registration/"
 EXECUTOR_URL = ORIGIN + "/api/v3/flows/executor/icthub-public-registration/?query="
@@ -92,7 +92,7 @@ class NativeRegistration:
         if not csrf:
             raise AuthError("注册会话已过期，请返回后重新开始。")
         return self.read(self.client.post(EXECUTOR_URL, json=body, headers={
-            "Origin": ORIGIN, "Referer": REGISTRATION_URL, "X-CSRFToken": csrf,
+            "Origin": ORIGIN, "Referer": REGISTRATION_URL, CSRF_HEADER: csrf,
         }))
 
     def submit(self, values):

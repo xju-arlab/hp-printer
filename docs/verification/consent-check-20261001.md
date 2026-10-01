@@ -1,25 +1,32 @@
-# 授权页问题核查
+# 授权页问题核查与修复
 
-检查时间：2026-10-01 UTC。用户提供“授权打印”页截图，权限说明为英文，红字为“账号要求的验证步骤暂不受安装器支持，请联系管理员。”。截图对应的客户端版本、账号与时间均未知。
+检查时间：2026-10-01 UTC。用户反馈正式版仍在“授权打印”页报“账号要求的验证步骤暂不受安装器支持”。
 
-## 版本与结论
+## 根因
 
-当前正式版仍为 `v0.1.0`，提交 `ffc7348602a93ebfeb5c6c12be6b0f7194b19de1`，安装包 SHA256 `cdedd57a480605d4cb565e99cad01e4535baf485f4c899d153e20e185cfe5e5f`。main 与该标签的 `native_auth.py` 和 `MainWindow.xaml.cs` 没有差异。
+已根据用户指定账号只读核对生产 Authentik 2026.5.5 的事件、会话状态和服务日志：
 
-- 英文说明问题确定仍存在：`NativeLogin.public_challenge()` 原样输出 `permissions` 和 `additional_permissions` 的 `name`，WPF 再逐行显示。其内容与截图中的内部 Scope 说明一致。
-- 通用红字确定仍存在：未识别的组件统一落到同一条错误，包括 `ak-stage-autosubmit`、`ak-stage-flow-error`、`xak-flow-shell`。服务端错误会被归为“验证步骤不支持”，仅凭这条提示无法区分原因。
-- 这不能证明截图中的授权失败必然在当前版复现。正常的 HTTP 302 与 `xak-flow-redirect` 完成路径通过了隔离模拟检查；真实截图对应的返回组件没有取到。
-- 本轮为核查，没有修改认证代码、账号策略或发布新安装包；尚不能标记为已修复。
+- 账号已激活，满足现有邮箱和用户组准入要求，密码登录成功。
+- 正式版 `ICTHubPrinter/0.1.0` 的两次失败分别发生在 04:47:59、04:49:08 UTC；RC9 也有相同记录。会话停在 Consent，OAuth 使用 code/query，未完成打印应用授权。
+- 对应服务日志明确为 `PermissionDenied('CSRF Failed: CSRF token missing.')`，发生于 `default-provider-authorization-explicit-consent`。
+- 服务端配置为 Cookie `authentik_csrf`、请求头 `X-Authentik-CSRF`。安装器却使用 `X-CSRFToken`。匿名登录阶段未暴露该问题，已登录会话提交授权时被拒绝；服务端将异常包装为 `ak-stage-flow-error`，旧客户端再误报为不支持验证步骤。
 
-## 检查证据
+这也解释了此前只模拟正常 302 / JSON 跳转的检查为何没有发现问题：模拟服务没有检查 Authentik 的专用 CSRF 请求头。该次早期核查未取得账号线索，不能作为真实授权成功证据。
 
-1. 使用当前源码与 HTTPX MockTransport 构造合成授权挑战，检查授权 token 提交、HTTP 302 / JSON 重定向、state 匹配、令牌交换调用。令牌内容及 TokenVerifier 为模拟值，没有请求真实用户登录、发放授权或提交打印。两条正常完成路径均通过。
-2. 将上述三种组件传给当前处理函数，均得到与截图完全相同的通用红字；合成权限列表中的英文名称原样保留。
-3. 只读查询 huawei2：生产 Authentik 为 `2026.5.5`，打印 Provider 使用 `default-provider-authorization-explicit-consent`，显式配置的 Stage 为单个 Consent。按该 Flow 路径/打印应用关键字过滤最近两天最多 100 条系统、配置、策略异常，未匹配到记录。该有限查询不能排除历史异常或未入库的客户端错误。
-4. 检查脚本位于本地忽略目录 `.runtime/check_current_consent.py` 和 `.runtime/inspect_consent_server.py`。输出不含密码、真实 OAuth code、cookie、token 或用户资料。
+协议依据：[生产对应版本的 CSRF 配置](https://github.com/goauthentik/authentik/blob/version/2026.5.5/authentik/root/settings.py)、[Flow 异常响应](https://github.com/goauthentik/authentik/blob/version/2026.5.5/authentik/flows/views/executor.py)。
 
-协议依据：[生产对应版本的 OAuth 完成阶段](https://github.com/goauthentik/authentik/blob/version/2026.5.5/authentik/providers/oauth2/views/authorize.py)、[挑战类型定义](https://github.com/goauthentik/authentik/blob/version/2026.5.5/authentik/flows/challenge.py)。Auth Code 默认使用 query 回调；form_post 对应 Autosubmit，不能仅凭截图认定它就是此次根因。
+## v0.1.1 修复
 
-## 后续定位
+- 登录与注册共用 `X-Authentik-CSRF` 请求头，每次提交读取当前 Cookie；缺少 Cookie 时提示重新登录。
+- 服务端流程错误改为准确提示，仅在格式合法时显示请求编号；不显示服务端错误正文、用户资料或堆栈。
+- 已知授权 Scope 改为简短中文，去掉空行和重复项；未知权限仍显示服务端说明，避免隐藏新增权限。
+- 未修改生产账号、认证策略、CSRF 防护、邮箱/MFA 校验或打印权限。
 
-授权文案可按已知 Scope ID 提供简短中文说明；需保留用户能理解的权限含义。错误处理应区分服务端错误和未支持的挑战，并仅保留经过校验的组件名/请求编号作为诊断信息。若后续复现，先取得返回组件及请求编号，再补兼容与回归用例；不因这条通用提示直接放宽登录、回调来源或邮箱准入检查。
+## 检查证据与边界
+
+1. 在生产容器内，使用 RequestFactory 与合成 Cookie 调用现有 CSRFCheck，未发送真实用户请求：旧请求头返回 `CSRF token missing.`，新请求头通过。没有写入账号、会话或授权。
+2. 新增 11 项隔离检查：CSRF Cookie 轮换后授权完成、HTTP/JSON 回调、各登录步骤、注册提交、缺失 Cookie、中文权限、服务错误隐私过滤与授权重试提示。所有请求通过 MockTransport，未登录真人账号或提交打印。
+3. 全部 51 项检查及 Ruff 通过。PKCE、state、nonce 和令牌校验继续保留。
+4. 真实 Windows 安装器登录、点击“允许”及后续打印仍待用户重试；不能将隔离检查写成真实账号验收。
+
+构建和发布信息将记录在下方。诊断脚本保存在忽略目录 `.runtime/`，公开仓库不收录用户账号、邮箱、Cookie、OAuth code 或令牌。
