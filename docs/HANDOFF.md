@@ -28,6 +28,8 @@ GitHub/GitCode 的 `v0.1.0-rc.3` 已公开发布同一 WPF EXE 和校验文件�
 
 本轮 Pi 同步未完成：`192.168.5.87:22` 超时，当前电脑不在实验室网段，Windows/WSL Tailscale 均不可用。上次已确认 Pi main 为 `f9062d441d1832a76311632f5994becbc7ea39f5`，源码和旧 RC 标签待恢复连接后同步；本地/GitHub/GitCode 已对齐。
 
+待处理：用户反馈授权页英文内部说明与通用“验证步骤不支持”红字。v0.1.0 的相关代码仍存在该显示/诊断问题，常规授权模拟通过；未取得截图对应的真实返回组件，尚未修复。见 [授权核查](verification/consent-check-20261001.md)。
+
 ## 已落地
 
 - 本地 `/home/winbeau/xju-arlab/hp-printer`，公开仓库 `https://github.com/xju-arlab/hp-printer` 与 `https://gitcode.com/xju-arlab/hp-printer`，主分支 main；本地 remote 分别为 origin/gitcode，Pi 同路径 clone。版本以 GitHub 为准，本地 commit 后推送两端，用 `scripts/sync-pi.sh` 拉取；需要部署代码时再在 Pi 执行 `scripts/install-pi.sh`。RC2 在两端发布相同 EXE/SHA256，镜像不另行构建。
