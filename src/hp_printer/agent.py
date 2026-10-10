@@ -121,7 +121,7 @@ def create_agent(directory: Path | None = None):
     @app.get(PRINTER_PATH)
     @app.get(PRINTER_PATH.lower())
     def info():
-        return Response("ICTHub Windows IPP bridge", media_type="text/plain")
+        return Response("ICTHub IPP bridge", media_type="text/plain")
 
     @app.post(PRINTER_PATH)
     @app.post(PRINTER_PATH.lower())

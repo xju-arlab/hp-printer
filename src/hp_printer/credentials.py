@@ -1,13 +1,18 @@
-"""Current-user Windows DPAPI storage; plaintext tokens never touch disk."""
+"""Current-user DPAPI / macOS Keychain storage; tokens never touch disk in plaintext."""
 
 import ctypes
 import json
 import os
+import sys
 from ctypes import wintypes
 from pathlib import Path
 
 
 def app_dir() -> Path:
+    if sys.platform == "darwin":
+        path = Path.home() / "Library/Application Support/ICTHubPrinter"
+        path.mkdir(parents=True, exist_ok=True, mode=0o700)
+        return path
     if os.name != "nt":
         raise RuntimeError("The printer installer and credential store require Windows")
     path = Path(os.environ["LOCALAPPDATA"]) / "ICTHubPrinter"
@@ -42,6 +47,11 @@ def _crypt(data: bytes, decrypt: bool = False) -> bytes:
 
 
 def save_tokens(tokens: dict):
+    if sys.platform == "darwin":
+        from .macos_keychain import write
+
+        write(json.dumps(tokens).encode())
+        return
     path = app_dir() / "credentials.dpapi"
     temporary = path.with_suffix(".tmp")
     temporary.write_bytes(_crypt(json.dumps(tokens).encode()))
@@ -49,4 +59,8 @@ def save_tokens(tokens: dict):
 
 
 def load_tokens() -> dict:
+    if sys.platform == "darwin":
+        from .macos_keychain import read
+
+        return json.loads(read())
     return json.loads(_crypt((app_dir() / "credentials.dpapi").read_bytes(), decrypt=True))
